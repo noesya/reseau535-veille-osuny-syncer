@@ -4,6 +4,7 @@ require_relative 'models/discipline'
 require_relative 'models/thematique'
 require_relative 'models/organization'
 require_relative 'models/equipe_artistique'
+require_relative 'models/operateur'
 
 module Grist
   class Client
@@ -33,6 +34,10 @@ module Grist
 
     def load_equipes_artistiques
       find_all(Grist::Models::EquipeArtistique)
+    end
+
+    def load_operateurs
+      find_all(Grist::Models::Operateur)
     end
 
     protected

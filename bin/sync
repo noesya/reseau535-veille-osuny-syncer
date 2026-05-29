@@ -48,3 +48,16 @@ equipes_artistiques.each do |equipe_artistique|
   equipe_artistique.departements = departements
   equipe_artistique.sync_to_osuny
 end
+
+# On charge les opérateurs depuis Grist et on les synchronise vers osuny
+operateurs = client.load_operateurs
+puts "#{operateurs.count} opérateurs chargés depuis Grist."
+puts "Synchronisation vers osuny..."
+operateurs.each do |operateur|
+  # On associe les départements à l'opérateur avant de le synchroniser vers osuny
+  departements = operateur.departement_ids.map { |departement_id|
+    departements.find { |departement| departement.id == departement_id }
+  }.compact
+  operateur.departements = departements
+  operateur.sync_to_osuny
+end
