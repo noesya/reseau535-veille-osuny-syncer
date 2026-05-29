@@ -1,0 +1,8 @@
+{
+  "jobs": [
+    {
+      "command": "0 0 * * * bin/sync",
+      "size": "M"
+    }
+  ]
+}
