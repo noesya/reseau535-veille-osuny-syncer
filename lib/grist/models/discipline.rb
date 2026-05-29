@@ -35,7 +35,7 @@ module Grist
           }
         })
       rescue OsunyApi::ApiError => e
-        puts "Error syncing discipline \"#{name}\": #{e.message}"
+        puts "Erreur lors de la synchronisation de la discipline \"#{name}\": #{e.message}"
       end
     end
   end

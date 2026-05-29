@@ -1,6 +1,6 @@
 module Grist
   module Models
-    class Department < Base
+    class Departement < Base
       attr_reader :id, :name, :number
 
       def self.table_name
@@ -14,7 +14,7 @@ module Grist
       end
 
       def migration_identifier
-        "organization-category-department-#{id}"
+        "organization-category-departement-#{id}"
       end
 
       def sync_to_osuny
@@ -36,7 +36,7 @@ module Grist
           }
         })
       rescue OsunyApi::ApiError => e
-        puts "Error syncing department \"#{name}\": #{e.message}"
+        puts "Erreur lors de la synchronisation du département \"#{name}\": #{e.message}"
       end
     end
   end

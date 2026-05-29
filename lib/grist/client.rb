@@ -1,5 +1,5 @@
 require_relative 'models/base'
-require_relative 'models/department'
+require_relative 'models/departement'
 require_relative 'models/discipline'
 
 module Grist
@@ -16,8 +16,8 @@ module Grist
       ENV['GRIST_DOCUMENT_ID']
     end
 
-    def load_departments
-      find_all(Grist::Models::Department)
+    def load_departements
+      find_all(Grist::Models::Departement)
     end
 
     def load_disciplines
