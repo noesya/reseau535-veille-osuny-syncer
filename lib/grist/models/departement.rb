@@ -1,14 +1,14 @@
 module Grist
   module Models
     class Departement < Base
-      attr_reader :id, :name, :number
+      attr_reader :name, :number
 
       def self.table_name
         "Departements"
       end
 
       def initialize(data)
-        @id = data["id"]
+        super(data)
         @name = data["fields"]["Nom"]
         @number = data["fields"]["Numero"]
       end
@@ -19,7 +19,7 @@ module Grist
 
       def sync_to_osuny
         api = OsunyApi::UniversityOrganizationCategoryApi.new
-        api.university_organizations_categories_upsert_post({
+        response_data = api.university_organizations_categories_upsert_post_with_http_info({
           body: {
             categories: [
               {
@@ -33,8 +33,10 @@ module Grist
                 }
               }
             ]
-          }
-        })
+          },
+          return_type: 'Object'
+        }).first
+        set_osuny_id(response_data)
       rescue OsunyApi::ApiError => e
         puts "Erreur lors de la synchronisation du département \"#{name}\": #{e.message}"
       end

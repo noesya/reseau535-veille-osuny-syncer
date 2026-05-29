@@ -35,3 +35,16 @@ thematiques = client.load_thematiques
 puts "#{thematiques.count} thématiques chargées depuis Grist."
 puts "Synchronisation vers osuny..."
 thematiques.each(&:sync_to_osuny)
+
+# On charge les équipes artistiques depuis Grist et on les synchronise vers osuny
+equipes_artistiques = client.load_equipes_artistiques
+puts "#{equipes_artistiques.count} équipes artistiques chargées depuis Grist."
+puts "Synchronisation vers osuny..."
+equipes_artistiques.each do |equipe_artistique|
+  # On associe les départements à l'équipe artistique avant de la synchroniser vers osuny
+  departements = equipe_artistique.departement_ids.map { |departement_id|
+    departements.find { |departement| departement.id == departement_id }
+  }.compact
+  equipe_artistique.departements = departements
+  equipe_artistique.sync_to_osuny
+end

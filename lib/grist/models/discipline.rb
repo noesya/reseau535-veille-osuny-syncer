@@ -1,14 +1,14 @@
 module Grist
   module Models
     class Discipline < Base
-      attr_reader :id, :name
+      attr_reader :name
 
       def self.table_name
         "Disciplines"
       end
 
       def initialize(data)
-        @id = data["id"]
+        super(data)
         @name = data["fields"]["Nom"]
       end
 
@@ -18,7 +18,7 @@ module Grist
 
       def sync_to_osuny
         api = OsunyApi::CommunicationWebsitePortfolioCategoryApi.new
-        api.communication_websites_website_id_portfolio_categories_upsert_post(ENV["OSUNY_WEBSITE_ID"], {
+        response_data = api.communication_websites_website_id_portfolio_categories_upsert_post_with_http_info(ENV["OSUNY_WEBSITE_ID"], {
           body: {
             categories: [
               {
@@ -32,8 +32,10 @@ module Grist
                 }
               }
             ]
-          }
-        })
+          },
+          return_type: 'Object'
+        }).first
+        set_osuny_id(response_data)
       rescue OsunyApi::ApiError => e
         puts "Erreur lors de la synchronisation de la discipline \"#{name}\": #{e.message}"
       end
