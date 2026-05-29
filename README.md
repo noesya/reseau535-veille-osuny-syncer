@@ -1,6 +1,6 @@
-# Veille artistique
+# Réseau 535 - Veille artistique
 
-Automate de synchronisation de la veille artistique vers le site osuny.
+Automate de synchronisation de la veille artistique du Réseau 535 vers le site osuny.
 
 ## Architecture
 
