@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'bundler/setup'
+
+require_relative '../lib/grist/client'
+
+Bundler.require(:default)
+Dotenv.load
+
+OsunyApi.configure do |config|
+  config.api_key['X-Osuny-Token'] = ENV['OSUNY_API_TOKEN']
+  config.scheme = ENV['OSUNY_API_SCHEME'] || 'https'
+  config.host = ENV['OSUNY_API_HOST']
+  config.base_path = '/api/osuny/v1'
+  # config.debugging = true
+end
+
+client = Grist::Client.new
+
+# On charge les départements depuis Grist
+departments = client.load_departments
+puts "#{departments.count} départements chargés depuis Grist."
+puts "Synchronisation vers osuny..."
+
+departments.each(&:sync_to_osuny)

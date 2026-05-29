@@ -1,0 +1,9 @@
+source "https://rubygems.org"
+git_source(:github) { |repo| "https://github.com/#{repo}.git" }
+
+ruby "4.0.5"
+
+gem "byebug"
+gem "dotenv"
+gem "net-http"
+gem "osuny_api"#, path: '../../osunyorg/api'
