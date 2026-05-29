@@ -1,6 +1,7 @@
 require_relative 'models/base'
 require_relative 'models/departement'
 require_relative 'models/discipline'
+require_relative 'models/thematique'
 
 module Grist
   class Client
@@ -22,6 +23,10 @@ module Grist
 
     def load_disciplines
       find_all(Grist::Models::Discipline)
+    end
+
+    def load_thematiques
+      find_all(Grist::Models::Thematique)
     end
 
     protected

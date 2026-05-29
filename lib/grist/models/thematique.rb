@@ -1,10 +1,10 @@
 module Grist
   module Models
-    class Discipline < Base
+    class Thematique < Base
       attr_reader :id, :name
 
       def self.table_name
-        "Disciplines"
+        "Thematiques"
       end
 
       def initialize(data)
@@ -13,7 +13,7 @@ module Grist
       end
 
       def migration_identifier
-        "portfolio-category-discipline-#{id}"
+        "portfolio-category-thematique-#{id}"
       end
 
       def sync_to_osuny
@@ -23,7 +23,7 @@ module Grist
             categories: [
               {
                 migration_identifier: migration_identifier,
-                parent_id: ENV["OSUNY_PROJECT_DISCIPLINES_ID"],
+                parent_id: ENV["OSUNY_PROJECT_THEMATIQUES_ID"],
                 localizations: {
                   fr: {
                     migration_identifier: l10n_migration_identifier,
@@ -35,7 +35,7 @@ module Grist
           }
         })
       rescue OsunyApi::ApiError => e
-        puts "Erreur lors de la synchronisation de la discipline \"#{name}\": #{e.message}"
+        puts "Erreur lors de la synchronisation de la thématique \"#{name}\": #{e.message}"
       end
     end
   end

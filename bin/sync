@@ -29,3 +29,9 @@ disciplines = client.load_disciplines
 puts "#{disciplines.count} disciplines chargées depuis Grist."
 puts "Synchronisation vers osuny..."
 disciplines.each(&:sync_to_osuny)
+
+# On charge les thématiques depuis Grist et on les synchronise vers osuny
+thematiques = client.load_thematiques
+puts "#{thematiques.count} thématiques chargées depuis Grist."
+puts "Synchronisation vers osuny..."
+thematiques.each(&:sync_to_osuny)
