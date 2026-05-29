@@ -9,9 +9,9 @@ Les données sont présentes dans un document Grist et celles-ci sont synchronis
 ## Workflow
 
 - On synchronise les objets satellites
-  - Les catégories d'organisations (Départements et types d'organisation)
+  - Les catégories d'organisations (Départements)
+  - Les catégories de projets (Disciplines, Thématiques)
   - Les organisations (Equipes artistiques, Lieux, Opérateurs)
-  - Les catégories de projets (Discipline, Thématiques)
 - On peut ensuite synchroniser les Spectacles
   - Infos principales : Nom, Synopsis, Année, Affiche (image)
   - Catégories : Discipline, Thématiques

@@ -18,9 +18,14 @@ end
 
 client = Grist::Client.new
 
-# On charge les départements depuis Grist
+# On charge les départements depuis Grist et on les synchronise vers osuny
 departments = client.load_departments
 puts "#{departments.count} départements chargés depuis Grist."
 puts "Synchronisation vers osuny..."
-
 departments.each(&:sync_to_osuny)
+
+# On charge les disciplines depuis Grist et on les synchronise vers osuny
+disciplines = client.load_disciplines
+puts "#{disciplines.count} disciplines chargées depuis Grist."
+puts "Synchronisation vers osuny..."
+disciplines.each(&:sync_to_osuny)

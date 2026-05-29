@@ -1,5 +1,6 @@
 require_relative 'models/base'
 require_relative 'models/department'
+require_relative 'models/discipline'
 
 module Grist
   class Client
@@ -17,6 +18,10 @@ module Grist
 
     def load_departments
       find_all(Grist::Models::Department)
+    end
+
+    def load_disciplines
+      find_all(Grist::Models::Discipline)
     end
 
     protected
