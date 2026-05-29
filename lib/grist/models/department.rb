@@ -24,7 +24,7 @@ module Grist
             categories: [
               {
                 migration_identifier: migration_identifier,
-                parent_id: ENV["OSUNY_ORGANIZATION_TAXONOMY_DEPARTMENTS_ID"],
+                parent_id: ENV["OSUNY_ORGANIZATION_DEPARTEMENTS_ID"],
                 localizations: {
                   fr: {
                     migration_identifier: l10n_migration_identifier,
