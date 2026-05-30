@@ -20,8 +20,13 @@ client = Grist::Client.new
 
 # On charge les départements depuis Grist et on les synchronise vers osuny
 departements = client.load_departements
+# @SebouChu je crois que je préfèrerais ça
+# departements = Grist::Models::Departement.all
+# et le model se débrouille de l'instanciation du client
+# ça ressemble plus à ActiveRecord
 puts "#{departements.count} départements chargés depuis Grist."
 puts "Synchronisation vers osuny..."
+# Ca c'est impeccable, le puts devrait être dedans, dans le base, ça allègerait
 departements.each(&:sync_to_osuny)
 
 # On charge les disciplines depuis Grist et on les synchronise vers osuny
