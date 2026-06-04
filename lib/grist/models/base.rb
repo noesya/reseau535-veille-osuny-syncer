@@ -27,6 +27,7 @@ module Grist
 
       # ["L", 1, 2] => [1, 2]
       def list_values(list)
+        return [] unless list.is_a?(Array) && list.first == "L"
         list[1..-1]
       end
 

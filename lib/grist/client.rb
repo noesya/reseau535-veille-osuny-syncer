@@ -5,6 +5,7 @@ require_relative 'models/thematique'
 require_relative 'models/organization'
 require_relative 'models/equipe_artistique'
 require_relative 'models/operateur'
+require_relative 'models/spectacle'
 
 module Grist
   class Client
@@ -40,11 +41,21 @@ module Grist
       find_all(Grist::Models::Operateur)
     end
 
+    def load_spectacles
+      find_all(Grist::Models::Spectacle)
+    end
+
+    def download_attachment(attachment_id)
+      response = get("/docs/#{self.class.document_id}/attachments/#{attachment_id}/download")
+      response.body
+    end
+
     protected
 
     def find_all(model_klass)
-      results = get("/docs/#{self.class.document_id}/tables/#{model_klass.table_name}/records")
-      results['records'].map { |record| model_klass.new(record) }
+      response = get("/docs/#{self.class.document_id}/tables/#{model_klass.table_name}/records")
+      data = JSON.parse(response.body)
+      data['records'].map { |record| model_klass.new(record) }
     end
 
     def get(path, params: {})
@@ -52,16 +63,6 @@ module Grist
       uri.query = URI.encode_www_form(params) if params.any?
 
       request = Net::HTTP::Get.new(uri)
-
-      self.request(request)
-    end
-
-    def post(path, body: {})
-      uri = URI(self.class.api_url + path)
-
-      request = Net::HTTP::Post.new(uri)
-      request['Content-Type'] = 'application/json'
-      request.body = JSON.generate(body)
 
       self.request(request)
     end
@@ -78,7 +79,7 @@ module Grist
         raise "API request failed with status #{response.code}: #{response.body}"
       end
 
-      JSON.parse(response.body)
+      response
     end
   end
 end
