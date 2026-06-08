@@ -3,7 +3,7 @@ module Grist
     class Spectacle::Etape < Base
       attr_reader :spectacle_id, :lieu_id, :operator_ids,
                   :start_date, :end_date, :state, :comment
-      attr_accessor :spectacle, :lieu, :operators
+      attr_accessor :lieu, :operators
 
       def self.table_name
         "Etapes"
@@ -17,11 +17,21 @@ module Grist
         @start_date = data["fields"]["Debut"]
         @end_date = data["fields"]["Fin"]
         @state = data["fields"]["Etat"]
-        @comment = data["fields"]["Commentaire"]
+        @comment = data["fields"]["Commentaire_public"]
       end
 
       def migration_identifier
         "spectacle-etape-#{id}"
+      end
+
+      def lieu
+        @lieu ||= Grist::Models::Lieu.find(lieu_id)
+      end
+
+      def operators
+        @operators ||= operator_ids.map { |operator_id|
+          Grist::Models::Operator.find(operator_id)
+        }.compact
       end
 
     end

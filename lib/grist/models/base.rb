@@ -13,7 +13,11 @@ module Grist
 
       def self.all
         records = Grist::Client.instance.find_all(table_name)
-        records.map { |record| new(record) }
+        @all ||= records.map { |record| new(record) }
+      end
+
+      def self.find(id)
+        all.find { |record| record.id == id }
       end
 
       def initialize(data)

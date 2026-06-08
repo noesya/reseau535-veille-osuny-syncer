@@ -18,7 +18,6 @@ end
 # On charge les départements depuis Grist et on les synchronise vers osuny
 departements = Grist::Models::Departement.all
 puts "#{departements.count} départements chargés depuis Grist."
-# Ca c'est impeccable, le puts devrait être dedans, dans le base, ça allègerait
 departements.each(&:sync_to_osuny)
 
 # # On charge les disciplines depuis Grist et on les synchronise vers osuny
@@ -34,27 +33,11 @@ thematiques.each(&:sync_to_osuny)
 # On charge les organisations depuis Grist et on les synchronise vers osuny
 organisations = Grist::Models::Organisation.all
 puts "#{organisations.count} organisations chargées depuis Grist."
-organisations.each do |organisation|
-  # On associe les départements à l'organisation avant de la synchroniser vers osuny
-  departements = organisation.departement_ids.map { |departement_id|
-    departements.find { |departement| departement.id == departement_id }
-  }.compact
-  organisation.departements = departements
-  # On associe les opérateurs à l'organisation avant de la synchroniser vers osuny
-  operateurs = organisation.operateur_ids.map { |operateur_id|
-    organisations.find { |organisation| organisation.id == operateur_id }
-  }.compact
-  organisation.operateurs = operateurs
-  # On gère la direction inverse, en associant les organisations opérées
-  operating_organisations = organisations.select { |organisation|
-    organisation.operateur_ids.include?(organisation.id)
-  }
-  organisation.operating_organisations = operating_organisations
-  # Enfin, on synchronise l'organisation vers osuny
-  organisation.sync_to_osuny
-end
+# organisations.each(&:sync_to_osuny)
 
 spectacles = Grist::Models::Spectacle.all
 puts "#{spectacles.count} spectacles chargés depuis Grist."
 etapes = Grist::Models::Spectacle::Etape.all
 puts "#{etapes.count} étapes chargées depuis Grist."
+
+# spectacles.each(&:sync_to_osuny)

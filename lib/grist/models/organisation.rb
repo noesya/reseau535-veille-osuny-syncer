@@ -30,6 +30,24 @@ module Grist
         "organisation-#{id}"
       end
 
+      def departements
+        @departements ||= departement_ids.map { |departement_id|
+          Departement.find(departement_id)
+        }.compact
+      end
+
+      def operateurs
+        @operateurs ||= operateur_ids.map { |operateur_id|
+          Organisation.find(operateur_id)
+        }.compact
+      end
+
+      def operating_organisations
+        @operating_organisations ||= Organisation.all.select { |organisation|
+          organisation.operateur_ids.include?(self.id)
+        }
+      end
+
       def sync_to_osuny
         puts "Synchronisation de l'organisation « #{name} » vers osuny..."
         api = OsunyApi::UniversityOrganizationApi.new
