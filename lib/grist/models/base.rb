@@ -11,6 +11,11 @@ module Grist
         @table_columns ||= Grist::Client.new.get("/tables/#{self.table_name}/columns")
       end
 
+      def self.all
+        records = Grist::Client.instance.find_all(table_name)
+        records.map { |record| new(record) }
+      end
+
       def initialize(data)
         @id = data["id"]
       end

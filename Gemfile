@@ -7,3 +7,4 @@ gem "byebug"
 gem "dotenv"
 gem "net-http"
 gem "osuny_api"#, path: '../../osunyorg/api'
+gem "singleton"

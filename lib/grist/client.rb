@@ -8,6 +8,8 @@ require_relative 'models/spectacle/etape'
 
 module Grist
   class Client
+    include Singleton
+
     def self.api_key
       ENV['GRIST_API_KEY']
     end
@@ -20,37 +22,13 @@ module Grist
       ENV['GRIST_DOCUMENT_ID']
     end
 
-    def load_departements
-      find_all(Grist::Models::Departement)
-    end
-
-    def load_disciplines
-      find_all(Grist::Models::Discipline)
-    end
-
-    def load_thematiques
-      find_all(Grist::Models::Thematique)
-    end
-
-    def load_organisations
-      find_all(Grist::Models::Organisation)
-    end
-
-    def load_spectacles
-      find_all(Grist::Models::Spectacle)
-    end
-
-    def load_etapes
-      find_all(Grist::Models::Spectacle::Etape)
+    def find_all(table_name)
+      response = get("/docs/#{self.class.document_id}/tables/#{table_name}/records")
+      data = JSON.parse(response.body)
+      data['records']
     end
 
     protected
-
-    def find_all(model_klass)
-      response = get("/docs/#{self.class.document_id}/tables/#{model_klass.table_name}/records")
-      data = JSON.parse(response.body)
-      data['records'].map { |record| model_klass.new(record) }
-    end
 
     def get(path, params: {})
       uri = URI(self.class.api_url + path)

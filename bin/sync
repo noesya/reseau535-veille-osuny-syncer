@@ -2,11 +2,10 @@
 
 require 'rubygems'
 require 'bundler/setup'
-
-require_relative '../lib/grist/client'
-
 Bundler.require(:default)
 Dotenv.load
+
+require_relative '../lib/grist/client'
 
 OsunyApi.configure do |config|
   config.api_key['X-Osuny-Token'] = ENV['OSUNY_API_TOKEN']
@@ -16,30 +15,24 @@ OsunyApi.configure do |config|
   # config.debugging = true
 end
 
-client = Grist::Client.new
-
 # On charge les départements depuis Grist et on les synchronise vers osuny
-departements = client.load_departements
-# @SebouChu je crois que je préfèrerais ça
-# departements = Grist::Models::Departement.all
-# et le model se débrouille de l'instanciation du client
-# ça ressemble plus à ActiveRecord
+departements = Grist::Models::Departement.all
 puts "#{departements.count} départements chargés depuis Grist."
 # Ca c'est impeccable, le puts devrait être dedans, dans le base, ça allègerait
 departements.each(&:sync_to_osuny)
 
 # # On charge les disciplines depuis Grist et on les synchronise vers osuny
-# disciplines = client.load_disciplines
-# puts "#{disciplines.count} disciplines chargées depuis Grist."
-# disciplines.each(&:sync_to_osuny)
+disciplines = Grist::Models::Discipline.all
+puts "#{disciplines.count} disciplines chargées depuis Grist."
+disciplines.each(&:sync_to_osuny)
 
 # # On charge les thématiques depuis Grist et on les synchronise vers osuny
-# thematiques = client.load_thematiques
-# puts "#{thematiques.count} thématiques chargées depuis Grist."
-# thematiques.each(&:sync_to_osuny)
+thematiques = Grist::Models::Thematique.all
+puts "#{thematiques.count} thématiques chargées depuis Grist."
+thematiques.each(&:sync_to_osuny)
 
 # On charge les organisations depuis Grist et on les synchronise vers osuny
-organisations = client.load_organisations
+organisations = Grist::Models::Organisation.all
 puts "#{organisations.count} organisations chargées depuis Grist."
 organisations.each do |organisation|
   # On associe les départements à l'organisation avant de la synchroniser vers osuny
@@ -61,7 +54,7 @@ organisations.each do |organisation|
   organisation.sync_to_osuny
 end
 
-spectacles = client.load_spectacles
+spectacles = Grist::Models::Spectacle.all
 puts "#{spectacles.count} spectacles chargés depuis Grist."
-etapes = client.load_etapes
+etapes = Grist::Models::Spectacle::Etape.all
 puts "#{etapes.count} étapes chargées depuis Grist."
