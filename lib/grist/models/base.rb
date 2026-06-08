@@ -12,8 +12,10 @@ module Grist
       end
 
       def self.all
-        records = Grist::Client.instance.find_all(table_name)
-        @all ||= records.map { |record| new(record) }
+        @all ||= begin
+          records = Grist::Client.instance.find_all(table_name)
+          records.map { |record| new(record) }
+        end
       end
 
       def self.find(id)
@@ -43,6 +45,13 @@ module Grist
       def set_osuny_id(response_data)
         @osuny_id = response_data.dig(:created, 0, :id) ||
                       response_data.dig(:updated, 0, :id)
+      end
+
+      def destroy_block_data(migration_identifier)
+        {
+          migration_identifier: migration_identifier,
+          _destroy: "1"
+        }
       end
     end
   end

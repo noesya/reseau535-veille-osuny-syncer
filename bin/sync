@@ -33,11 +33,9 @@ thematiques.each(&:sync_to_osuny)
 # On charge les organisations depuis Grist et on les synchronise vers osuny
 organisations = Grist::Models::Organisation.all
 puts "#{organisations.count} organisations chargées depuis Grist."
-# organisations.each(&:sync_to_osuny)
+organisations.each(&:sync_to_osuny)
 
 spectacles = Grist::Models::Spectacle.all
 puts "#{spectacles.count} spectacles chargés depuis Grist."
-etapes = Grist::Models::Spectacle::Etape.all
-puts "#{etapes.count} étapes chargées depuis Grist."
 
-# spectacles.each(&:sync_to_osuny)
+spectacles.each(&:sync_to_osuny)
