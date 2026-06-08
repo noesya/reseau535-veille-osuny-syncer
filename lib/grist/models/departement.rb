@@ -18,6 +18,7 @@ module Grist
       end
 
       def sync_to_osuny
+        puts "Synchronisation du département « #{name} » vers osuny..."
         api = OsunyApi::UniversityOrganizationCategoryApi.new
         response_data = api.university_organizations_categories_upsert_post_with_http_info({
           body: {

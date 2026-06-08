@@ -25,26 +25,22 @@ departements = client.load_departements
 # et le model se débrouille de l'instanciation du client
 # ça ressemble plus à ActiveRecord
 puts "#{departements.count} départements chargés depuis Grist."
-puts "Synchronisation vers osuny..."
 # Ca c'est impeccable, le puts devrait être dedans, dans le base, ça allègerait
 departements.each(&:sync_to_osuny)
 
 # # On charge les disciplines depuis Grist et on les synchronise vers osuny
 # disciplines = client.load_disciplines
 # puts "#{disciplines.count} disciplines chargées depuis Grist."
-# puts "Synchronisation vers osuny..."
 # disciplines.each(&:sync_to_osuny)
 
 # # On charge les thématiques depuis Grist et on les synchronise vers osuny
 # thematiques = client.load_thematiques
 # puts "#{thematiques.count} thématiques chargées depuis Grist."
-# puts "Synchronisation vers osuny..."
 # thematiques.each(&:sync_to_osuny)
 
 # On charge les organisations depuis Grist et on les synchronise vers osuny
 organisations = client.load_organisations
 puts "#{organisations.count} organisations chargées depuis Grist."
-puts "Synchronisation vers osuny..."
 organisations.each do |organisation|
   # On associe les départements à l'organisation avant de la synchroniser vers osuny
   departements = organisation.departement_ids.map { |departement_id|
@@ -67,3 +63,5 @@ end
 
 spectacles = client.load_spectacles
 puts "#{spectacles.count} spectacles chargés depuis Grist."
+etapes = client.load_etapes
+puts "#{etapes.count} étapes chargées depuis Grist."

@@ -4,6 +4,7 @@ require_relative 'models/discipline'
 require_relative 'models/thematique'
 require_relative 'models/organisation'
 require_relative 'models/spectacle'
+require_relative 'models/spectacle/etape'
 
 module Grist
   class Client
@@ -37,6 +38,10 @@ module Grist
 
     def load_spectacles
       find_all(Grist::Models::Spectacle)
+    end
+
+    def load_etapes
+      find_all(Grist::Models::Spectacle::Etape)
     end
 
     protected

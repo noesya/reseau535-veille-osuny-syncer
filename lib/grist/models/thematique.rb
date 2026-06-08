@@ -17,6 +17,7 @@ module Grist
       end
 
       def sync_to_osuny
+        puts "Synchronisation de la thématique « #{name} » vers osuny..."
         api = OsunyApi::CommunicationWebsitePortfolioCategoryApi.new
         response_data = api.communication_websites_website_id_portfolio_categories_upsert_post_with_http_info(ENV["OSUNY_WEBSITE_ID"], {
           body: {
