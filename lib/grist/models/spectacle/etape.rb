@@ -1,9 +1,9 @@
 module Grist
   module Models
     class Spectacle::Etape < Base
-      attr_reader :spectacle_id, :lieu_id, :operator_ids,
+      attr_reader :spectacle_id, :lieu_id, :operateur_ids,
                   :start_date, :end_date, :state, :comment
-      attr_accessor :lieu, :operators
+      attr_accessor :lieu, :operateurs
 
       def self.table_name
         "Etapes"
@@ -13,9 +13,9 @@ module Grist
         super(data)
         @spectacle_id = data["fields"]["Spectacle"]
         @lieu_id = data["fields"]["Lieu"]
-        @operator_ids = list_values(data["fields"]["Operateurs"])
-        @start_date = data["fields"]["Debut"]
-        @end_date = data["fields"]["Fin"]
+        @operateur_ids = list_values(data["fields"]["Operateurs"])
+        @start_date = date_value(data["fields"]["Debut"])
+        @end_date = date_value(data["fields"]["Fin"])
         @state = data["fields"]["Etat"]
         @comment = data["fields"]["Commentaire_public"]
       end
@@ -25,12 +25,12 @@ module Grist
       end
 
       def lieu
-        @lieu ||= Grist::Models::Lieu.find(lieu_id)
+        @lieu ||= Organisation.find(lieu_id)
       end
 
-      def operators
-        @operators ||= operator_ids.map { |operator_id|
-          Grist::Models::Operator.find(operator_id)
+      def operateurs
+        @operateurs ||= operateur_ids.map { |operateur_id|
+          Organisation.find(operateur_id)
         }.compact
       end
 

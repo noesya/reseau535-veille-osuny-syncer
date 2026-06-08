@@ -42,13 +42,13 @@ module Grist
 
       def disciplines
         @disciplines ||= discipline_ids.map { |discipline_id|
-          Grist::Models::Discipline.find(discipline_id)
+          Discipline.find(discipline_id)
         }.compact
       end
 
       def thematiques
         @thematiques ||= thematiques_ids.map { |thematique_id|
-          Grist::Models::Thematique.find(thematique_id)
+          Thematique.find(thematique_id)
         }.compact
       end
 
@@ -59,9 +59,15 @@ module Grist
       end
 
       def etapes
-        @etapes ||= Spectacle::Etape.all.select { |etape|
-          etape.spectacle_id == id
-        }
+        @etapes ||= begin
+          unordered_etapes = Spectacle::Etape.all.select { |etape|
+            etape.spectacle_id == id
+          }
+          unordered_etapes.sort_by { |etape|
+            etape.start_date.nil? ? Float::INFINITY
+                                  : etape.start_date.to_time.to_i
+          }
+        end
       end
 
       def sync_to_osuny
@@ -105,12 +111,15 @@ module Grist
       def osuny_blocks
         @osuny_blocks ||= [
           block_equipes_artistiques,
-          block_etapes,
           block_information,
           block_files,
           block_soutiens,
           block_video,
-          block_comment
+          block_comment,
+          block_etapes_title,
+          block_etapes_tableau,
+          block_etapes_lieux,
+          block_etapes_operateurs
         ].compact
       end
 
@@ -132,22 +141,6 @@ module Grist
         }
       end
 
-      def block_etapes
-        block_migration_identifier = "#{l10n_migration_identifier}-etapes"
-        return destroy_block_data(block_migration_identifier) if etapes.empty?
-        {
-          migration_identifier: block_migration_identifier,
-          position: 2,
-          title: "Étapes",
-          template_kind: "organizations",
-          data: {
-            mode: "selection",
-            layout: "large",
-            elements: []
-          }
-        }
-      end
-
       def block_information
         block_migration_identifier = "#{l10n_migration_identifier}-information"
         rows = []
@@ -158,7 +151,7 @@ module Grist
 
         {
           migration_identifier: block_migration_identifier,
-          position: 3,
+          position: 2,
           title: "Informations",
           template_kind: "datatable",
           data: {
@@ -175,7 +168,7 @@ module Grist
         return destroy_block_data(block_migration_identifier) if files_url == ""
         {
           migration_identifier: block_migration_identifier,
-          position: 4,
+          position: 3,
           title: "Fichiers",
           template_kind: "call_to_action",
           data: {
@@ -196,7 +189,7 @@ module Grist
         return destroy_block_data(block_migration_identifier) if operateurs.empty?
         {
           migration_identifier: block_migration_identifier,
-          position: 5,
+          position: 4,
           title: "Soutiens",
           template_kind: "organizations",
           data: {
@@ -214,7 +207,7 @@ module Grist
         return destroy_block_data(block_migration_identifier) if teaser_video_url == ""
         {
           migration_identifier: block_migration_identifier,
-          position: 6,
+          position: 5,
           title: "Teaser",
           template_kind: "video",
           data: {
@@ -228,11 +221,94 @@ module Grist
         return destroy_block_data(block_migration_identifier) if comment == ""
         {
           migration_identifier: block_migration_identifier,
-          position: 7,
+          position: 6,
           title: "Commentaire",
           template_kind: "chapter",
           data: {
             text: "<p>#{comment}</p>"
+          }
+        }
+      end
+
+      def block_etapes_title
+        block_migration_identifier = "#{l10n_migration_identifier}-etapes-titre"
+        return destroy_block_data(block_migration_identifier) if etapes.empty?
+        {
+          migration_identifier: block_migration_identifier,
+          position: 7,
+          title: "Vie du spectacle",
+          template_kind: "title",
+          data: {}
+        }
+      end
+
+      def block_etapes_tableau
+        block_migration_identifier = "#{l10n_migration_identifier}-etapes-tableau"
+        return destroy_block_data(block_migration_identifier) if etapes.empty?
+
+        rows = etapes.map { |etape|
+          [
+            etape.lieu&.name.to_s,
+            etape.operateurs.map(&:name).join(", "),
+            format_date(etape.start_date),
+            format_date(etape.end_date),
+            etape.state,
+            etape.comment
+          ]
+        }
+
+        {
+          migration_identifier: block_migration_identifier,
+          position: 8,
+          title: "Vie du spectacle",
+          template_kind: "datatable",
+          data: {
+            columns: ["Lieu", "Opérateurs", "Début", "Fin", "État", "Commentaire"],
+            elements: rows.map { |cells|
+              { cells: cells }
+            }
+          }
+        }
+      end
+
+      def block_etapes_lieux
+        block_migration_identifier = "#{l10n_migration_identifier}-etapes-lieux"
+        return destroy_block_data(block_migration_identifier) if etapes.empty?
+        lieux = etapes.collect(&:lieu).compact.uniq
+
+        {
+          migration_identifier: block_migration_identifier,
+          position: 9,
+          title: "Lieux",
+          template_kind: "organizations",
+          data: {
+            mode: "selection",
+            layout: "large",
+            alphabetical: true,
+            elements: lieux.map { |lieu|
+              { id: lieu.osuny_id }
+            }
+          }
+        }
+      end
+
+      def block_etapes_operateurs
+        block_migration_identifier = "#{l10n_migration_identifier}-etapes-operateurs"
+        return destroy_block_data(block_migration_identifier) if etapes.empty?
+        operateurs = etapes.flat_map(&:operateurs).compact.uniq
+
+        {
+          migration_identifier: block_migration_identifier,
+          position: 10,
+          title: "Opérateurs",
+          template_kind: "organizations",
+          data: {
+            mode: "selection",
+            layout: "large",
+            alphabetical: true,
+            elements: operateurs.map { |operateur|
+              { id: operateur.osuny_id }
+            }
           }
         }
       end

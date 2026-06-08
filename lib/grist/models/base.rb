@@ -1,6 +1,8 @@
 module Grist
   module Models
     class Base
+      MONTH_NAMES = %w[janvier février mars avril mai juin juillet août septembre octobre novembre décembre]
+
       attr_reader :id, :osuny_id
 
       def self.table_name
@@ -40,6 +42,17 @@ module Grist
       def list_values(list)
         return [] unless list.is_a?(Array) && list.first == "L"
         list[1..-1]
+      end
+
+      # 1732147200 => 2024-11-21
+      def date_value(value)
+        return unless value.is_a?(Integer)
+        Time.at(value).utc.to_date
+      end
+
+      def format_date(date)
+        return "" if date.nil?
+        "#{date.day} #{MONTH_NAMES[date.month - 1]} #{date.year}"
       end
 
       def set_osuny_id(response_data)
