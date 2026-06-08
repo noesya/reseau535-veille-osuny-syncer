@@ -2,9 +2,7 @@ require_relative 'models/base'
 require_relative 'models/departement'
 require_relative 'models/discipline'
 require_relative 'models/thematique'
-require_relative 'models/organization'
-require_relative 'models/equipe_artistique'
-require_relative 'models/operateur'
+require_relative 'models/organisation'
 require_relative 'models/spectacle'
 
 module Grist
@@ -33,21 +31,12 @@ module Grist
       find_all(Grist::Models::Thematique)
     end
 
-    def load_equipes_artistiques
-      find_all(Grist::Models::EquipeArtistique)
-    end
-
-    def load_operateurs
-      find_all(Grist::Models::Operateur)
+    def load_organisations
+      find_all(Grist::Models::Organisation)
     end
 
     def load_spectacles
       find_all(Grist::Models::Spectacle)
-    end
-
-    def download_attachment(attachment_id)
-      response = get("/docs/#{self.class.document_id}/attachments/#{attachment_id}/download")
-      response.body
     end
 
     protected

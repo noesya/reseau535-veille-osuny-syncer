@@ -29,42 +29,40 @@ puts "Synchronisation vers osuny..."
 # Ca c'est impeccable, le puts devrait être dedans, dans le base, ça allègerait
 departements.each(&:sync_to_osuny)
 
-# On charge les disciplines depuis Grist et on les synchronise vers osuny
-disciplines = client.load_disciplines
-puts "#{disciplines.count} disciplines chargées depuis Grist."
-puts "Synchronisation vers osuny..."
-disciplines.each(&:sync_to_osuny)
+# # On charge les disciplines depuis Grist et on les synchronise vers osuny
+# disciplines = client.load_disciplines
+# puts "#{disciplines.count} disciplines chargées depuis Grist."
+# puts "Synchronisation vers osuny..."
+# disciplines.each(&:sync_to_osuny)
 
-# On charge les thématiques depuis Grist et on les synchronise vers osuny
-thematiques = client.load_thematiques
-puts "#{thematiques.count} thématiques chargées depuis Grist."
-puts "Synchronisation vers osuny..."
-thematiques.each(&:sync_to_osuny)
+# # On charge les thématiques depuis Grist et on les synchronise vers osuny
+# thematiques = client.load_thematiques
+# puts "#{thematiques.count} thématiques chargées depuis Grist."
+# puts "Synchronisation vers osuny..."
+# thematiques.each(&:sync_to_osuny)
 
-# On charge les équipes artistiques depuis Grist et on les synchronise vers osuny
-equipes_artistiques = client.load_equipes_artistiques
-puts "#{equipes_artistiques.count} équipes artistiques chargées depuis Grist."
+# On charge les organisations depuis Grist et on les synchronise vers osuny
+organisations = client.load_organisations
+puts "#{organisations.count} organisations chargées depuis Grist."
 puts "Synchronisation vers osuny..."
-equipes_artistiques.each do |equipe_artistique|
-  # On associe les départements à l'équipe artistique avant de la synchroniser vers osuny
-  departements = equipe_artistique.departement_ids.map { |departement_id|
+organisations.each do |organisation|
+  # On associe les départements à l'organisation avant de la synchroniser vers osuny
+  departements = organisation.departement_ids.map { |departement_id|
     departements.find { |departement| departement.id == departement_id }
   }.compact
-  equipe_artistique.departements = departements
-  equipe_artistique.sync_to_osuny
-end
-
-# On charge les opérateurs depuis Grist et on les synchronise vers osuny
-operateurs = client.load_operateurs
-puts "#{operateurs.count} opérateurs chargés depuis Grist."
-puts "Synchronisation vers osuny..."
-operateurs.each do |operateur|
-  # On associe les départements à l'opérateur avant de le synchroniser vers osuny
-  departements = operateur.departement_ids.map { |departement_id|
-    departements.find { |departement| departement.id == departement_id }
+  organisation.departements = departements
+  # On associe les opérateurs à l'organisation avant de la synchroniser vers osuny
+  operateurs = organisation.operateur_ids.map { |operateur_id|
+    organisations.find { |organisation| organisation.id == operateur_id }
   }.compact
-  operateur.departements = departements
-  operateur.sync_to_osuny
+  organisation.operateurs = operateurs
+  # On gère la direction inverse, en associant les organisations opérées
+  operating_organisations = organisations.select { |organisation|
+    organisation.operateur_ids.include?(organisation.id)
+  }
+  organisation.operating_organisations = operating_organisations
+  # Enfin, on synchronise l'organisation vers osuny
+  organisation.sync_to_osuny
 end
 
 spectacles = client.load_spectacles
