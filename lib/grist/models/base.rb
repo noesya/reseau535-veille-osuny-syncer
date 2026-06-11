@@ -1,9 +1,13 @@
+require_relative 'with_osuny'
+
 module Grist
   module Models
     class Base
+      include WithOsuny
+
       MONTH_NAMES = %w[janvier février mars avril mai juin juillet août septembre octobre novembre décembre]
 
-      attr_reader :id, :osuny_id
+      attr_reader :id, :last_updated_at, :osuny_id
 
       def self.table_name
         raise NoMethodError, "You must implement the #{self.class.name}.table_name class method"
@@ -26,14 +30,7 @@ module Grist
 
       def initialize(data)
         @id = data["id"]
-      end
-
-      def migration_identifier
-        raise NoMethodError, "You must implement the #{self.class.name}.migration_identifier instance method"
-      end
-
-      def l10n_migration_identifier
-        "#{migration_identifier}-fr"
+        @last_updated_at = data["fields"]["Derniere_mise_a_jour"]
       end
 
       protected
@@ -53,11 +50,6 @@ module Grist
       def format_date(date)
         return "" if date.nil?
         "#{date.day} #{MONTH_NAMES[date.month - 1]} #{date.year}"
-      end
-
-      def set_osuny_id(response_data)
-        @osuny_id = response_data.dig(:created, 0, :id) ||
-                      response_data.dig(:updated, 0, :id)
       end
 
       def destroy_block_data(migration_identifier)

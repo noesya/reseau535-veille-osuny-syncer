@@ -16,29 +16,33 @@ module Grist
         "portfolio-category-thematique-#{id}"
       end
 
-      def sync_to_osuny
-        puts "Synchronisation de la thématique « #{name} » vers osuny..."
-        api = OsunyApi::CommunicationWebsitePortfolioCategoryApi.new
-        response_data = api.communication_websites_website_id_portfolio_categories_upsert_post_with_http_info(ENV["OSUNY_WEBSITE_ID"], {
-          body: {
-            categories: [
-              {
-                migration_identifier: migration_identifier,
-                parent_id: ENV["OSUNY_PROJECT_THEMATIQUES_ID"],
-                localizations: {
-                  fr: {
-                    migration_identifier: l10n_migration_identifier,
-                    name: name
+      protected
+
+      def osuny_api_klass
+        OsunyApi::CommunicationWebsitePortfolioCategoryApi
+      end
+
+      def osuny_api_upsert
+        osuny_api_instance.communication_websites_website_id_portfolio_categories_upsert_post_with_http_info(
+          ENV["OSUNY_WEBSITE_ID"],
+          {
+            body: {
+              categories: [
+                {
+                  migration_identifier: migration_identifier,
+                  parent_id: ENV["OSUNY_PROJECT_THEMATIQUES_ID"],
+                  localizations: {
+                    fr: {
+                      migration_identifier: l10n_migration_identifier,
+                      name: name
+                    }
                   }
                 }
-              }
-            ]
-          },
-          return_type: 'Object'
-        }).first
-        set_osuny_id(response_data)
-      rescue OsunyApi::ApiError => e
-        puts "Erreur lors de la synchronisation de la thématique \"#{name}\": #{e.message}"
+              ]
+            },
+            return_type: 'Object'
+          }
+        )
       end
     end
   end

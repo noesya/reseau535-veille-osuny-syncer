@@ -17,10 +17,14 @@ module Grist
         "organization-category-departement-#{id}"
       end
 
-      def sync_to_osuny
-        puts "Synchronisation du département « #{name} » vers osuny..."
-        api = OsunyApi::UniversityOrganizationCategoryApi.new
-        response_data = api.university_organizations_categories_upsert_post_with_http_info({
+      protected
+
+      def osuny_api_klass
+        OsunyApi::UniversityOrganizationCategoryApi
+      end
+
+      def osuny_api_upsert
+        osuny_api_instance.university_organizations_categories_upsert_post_with_http_info({
           body: {
             categories: [
               {
@@ -36,10 +40,7 @@ module Grist
             ]
           },
           return_type: 'Object'
-        }).first
-        set_osuny_id(response_data)
-      rescue OsunyApi::ApiError => e
-        puts "Erreur lors de la synchronisation du département \"#{name}\": #{e.message}"
+        })
       end
     end
   end

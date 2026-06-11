@@ -70,39 +70,41 @@ module Grist
         end
       end
 
-      def sync_to_osuny
-        puts "Synchronisation du spectacle « #{title} » vers osuny..."
-        api = OsunyApi::CommunicationWebsitePortfolioProjectApi.new
-        response_data = api.communication_websites_website_id_portfolio_projects_upsert_post_with_http_info(ENV["OSUNY_WEBSITE_ID"], {
-          body: {
-            projects: [
-              {
-                migration_identifier: migration_identifier,
-                year: year,
-                localizations: {
-                  fr: {
-                    migration_identifier: l10n_migration_identifier,
-                    title: title,
-                    subtitle: subtitle,
-                    summary: "<p>#{synopsis}</p>",
-                    featured_image: { url: featured_image_url },
-                    published: true,
-                    published_at: Time.now,
-                    category_ids: osuny_category_ids,
-                    blocks: osuny_blocks
-                  }
-                }
-              }
-            ]
-          },
-          return_type: 'Object'
-        }).first
-        set_osuny_id(response_data)
-      rescue OsunyApi::ApiError => e
-        puts "Erreur lors de la synchronisation du spectacle \"#{name}\": #{e.message}"
+      protected
+
+      def osuny_api_klass
+        OsunyApi::CommunicationWebsitePortfolioProjectApi
       end
 
-      protected
+      def osuny_api_upsert
+        osuny_api_instance.communication_websites_website_id_portfolio_projects_upsert_post_with_http_info(
+          ENV["OSUNY_WEBSITE_ID"],
+          {
+            body: {
+              projects: [
+                {
+                  migration_identifier: migration_identifier,
+                  year: year,
+                  localizations: {
+                    fr: {
+                      migration_identifier: l10n_migration_identifier,
+                      title: title,
+                      subtitle: subtitle,
+                      summary: "<p>#{synopsis}</p>",
+                      featured_image: { url: featured_image_url },
+                      published: true,
+                      published_at: Time.now,
+                      category_ids: osuny_category_ids,
+                      blocks: osuny_blocks
+                    }
+                  }
+                }
+              ]
+            },
+            return_type: 'Object'
+          }
+        )
+      end
 
       def osuny_category_ids
         @osuny_category_ids ||= disciplines.map(&:osuny_id) + thematiques.map(&:osuny_id)

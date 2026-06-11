@@ -48,10 +48,14 @@ module Grist
         }
       end
 
-      def sync_to_osuny
-        puts "Synchronisation de l'organisation « #{name} » vers osuny..."
-        api = OsunyApi::UniversityOrganizationApi.new
-        response_data = api.university_organizations_upsert_post_with_http_info({
+      protected
+
+      def osuny_api_klass
+        OsunyApi::UniversityOrganizationApi
+      end
+
+      def osuny_api_upsert
+        osuny_api_instance.university_organizations_upsert_post_with_http_info({
           body: {
             organizations: [
               {
@@ -72,13 +76,8 @@ module Grist
             ]
           },
           return_type: 'Object'
-        }).first
-        set_osuny_id(response_data)
-      rescue OsunyApi::ApiError => e
-        puts "Erreur lors de la synchronisation de l'organisation \"#{name}\": #{e.message}"
+        })
       end
-
-      protected
 
       def osuny_category_ids
         category_ids = []
