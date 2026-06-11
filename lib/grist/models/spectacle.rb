@@ -30,6 +30,10 @@ module Grist
         @comment = data["fields"]["Commentaire_public"].to_s.strip
       end
 
+      def to_s
+        title
+      end
+
       def migration_identifier
         "project-spectacle-#{id}"
       end
@@ -85,6 +89,7 @@ module Grist
                 {
                   migration_identifier: migration_identifier,
                   year: year,
+                  category_ids: osuny_category_ids,
                   localizations: {
                     fr: {
                       migration_identifier: l10n_migration_identifier,
@@ -94,7 +99,6 @@ module Grist
                       featured_image: { url: featured_image_url },
                       published: true,
                       published_at: Time.now,
-                      category_ids: osuny_category_ids,
                       blocks: osuny_blocks
                     }
                   }
@@ -103,6 +107,14 @@ module Grist
             },
             return_type: 'Object'
           }
+        )
+      end
+
+      def osuny_api_get
+        osuny_api_instance.communication_websites_website_id_portfolio_projects_id_get_with_http_info(
+          ENV["OSUNY_WEBSITE_ID"],
+          migration_identifier,
+          { return_type: 'Object' }
         )
       end
 

@@ -12,6 +12,10 @@ module Grist
         @name = data["fields"]["Nom"]
       end
 
+      def to_s
+        name
+      end
+
       def migration_identifier
         "portfolio-category-thematique-#{id}"
       end
@@ -42,6 +46,14 @@ module Grist
             },
             return_type: 'Object'
           }
+        )
+      end
+
+      def osuny_api_get
+        osuny_api_instance.communication_websites_website_id_portfolio_categories_id_get_with_http_info(
+          ENV["OSUNY_WEBSITE_ID"],
+          migration_identifier,
+          { return_type: 'Object' }
         )
       end
     end

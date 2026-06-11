@@ -26,6 +26,10 @@ module Grist
         @is_membre_535 = data["fields"]["Membre_535"]
       end
 
+      def to_s
+        name
+      end
+
       def migration_identifier
         "organisation-#{id}"
       end
@@ -77,6 +81,13 @@ module Grist
           },
           return_type: 'Object'
         })
+      end
+
+      def osuny_api_get
+        osuny_api_instance.university_organizations_id_get_with_http_info(
+          migration_identifier,
+          { return_type: 'Object' }
+        )
       end
 
       def osuny_category_ids

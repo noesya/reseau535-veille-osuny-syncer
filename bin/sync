@@ -15,27 +15,14 @@ OsunyApi.configure do |config|
   # config.debugging = true
 end
 
-# On charge les départements depuis Grist et on les synchronise vers osuny
-departements = Grist::Models::Departement.all
-puts "#{departements.count} départements chargés depuis Grist."
-departements.each(&:sync_to_osuny)
-
-# # On charge les disciplines depuis Grist et on les synchronise vers osuny
-disciplines = Grist::Models::Discipline.all
-puts "#{disciplines.count} disciplines chargées depuis Grist."
-disciplines.each(&:sync_to_osuny)
-
-# # On charge les thématiques depuis Grist et on les synchronise vers osuny
-thematiques = Grist::Models::Thematique.all
-puts "#{thematiques.count} thématiques chargées depuis Grist."
-thematiques.each(&:sync_to_osuny)
-
-# On charge les organisations depuis Grist et on les synchronise vers osuny
-organisations = Grist::Models::Organisation.all
-puts "#{organisations.count} organisations chargées depuis Grist."
-organisations.each(&:sync_to_osuny)
-
-spectacles = Grist::Models::Spectacle.all
-puts "#{spectacles.count} spectacles chargés depuis Grist."
-
-spectacles.each(&:sync_to_osuny)
+[
+  Grist::Models::Departement,
+  Grist::Models::Discipline,
+  Grist::Models::Thematique,
+  Grist::Models::Organisation,
+  Grist::Models::Spectacle
+].each do |klass|
+  recently_updated_records = klass.recently_updated
+  puts "[#{klass.name.split('::').last}] #{recently_updated_records.count} éléments récemment mis à jour (total: #{klass.all.count})."
+  recently_updated_records.each(&:sync_to_osuny)
+end

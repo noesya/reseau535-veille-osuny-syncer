@@ -9,12 +9,34 @@ module Grist
         "#{migration_identifier}-fr"
       end
 
-      def sync_to_osuny
-        puts "[#{self.class.name.split('::').last}] Synchronisation de « #{name} » vers osuny..."
-        response_data = osuny_api_upsert.first
-        set_osuny_id(response_data)
+      def osuny_id
+        return @osuny_id if @osuny_id
+        osuny_record = find_in_osuny
+        if osuny_record
+          # Trouvé dans osuny, on assigne l'ID
+          @osuny_id = osuny_record[:id]
+        else
+          # L'objet n'est pas dans osuny, on le synchronise, l'ID sera assigné automatiquement
+          sync_to_osuny
+        end
+        @osuny_id
+      end
+
+      def find_in_osuny
+        puts "[#{self.class.name.split('::').last}] Recherche de « #{to_s} » dans osuny..."
+        osuny_api_get.first
       rescue OsunyApi::ApiError => e
-        puts "[#{self.class.name.split('::').last}] Erreur lors de la synchronisation de \"#{name}\": #{e.message}"
+        return if e.code == 404 # L'objet n'existe pas côté osuny, on le synchronisera par la suite
+        raise e
+      end
+
+      def sync_to_osuny
+        puts "[#{self.class.name.split('::').last}] Synchronisation de « #{to_s} » vers osuny..."
+        response_data = osuny_api_upsert.first
+        osuny_record_id = response_data.dig(:created, 0, :id) || response_data.dig(:updated, 0, :id)
+        @osuny_id = osuny_record_id
+      rescue OsunyApi::ApiError => e
+        puts "[#{self.class.name.split('::').last}] Erreur lors de la synchronisation de \"#{to_s}\": #{e.message}"
       end
 
       protected
@@ -31,9 +53,8 @@ module Grist
         raise NoMethodError, "You must implement the #{self.class.name}.osuny_api_upsert instance method"
       end
 
-      def set_osuny_id(response_data)
-        @osuny_id = response_data.dig(:created, 0, :id) ||
-                      response_data.dig(:updated, 0, :id)
+      def osuny_api_get
+        raise NoMethodError, "You must implement the #{self.class.name}.osuny_api_get instance method"
       end
     end
   end

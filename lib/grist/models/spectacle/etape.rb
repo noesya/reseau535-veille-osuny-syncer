@@ -20,8 +20,16 @@ module Grist
         @comment = data["fields"]["Commentaire_public"]
       end
 
+      def to_s
+        "#{spectacle} - #{lieu}"
+      end
+
       def migration_identifier
         "spectacle-etape-#{id}"
+      end
+
+      def spectacle
+        @spectacle ||= Spectacle.find(spectacle_id)
       end
 
       def lieu
