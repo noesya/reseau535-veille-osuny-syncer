@@ -98,7 +98,6 @@ module Grist
                       summary: "<p>#{synopsis}</p>",
                       featured_image: { url: featured_image_url },
                       published: true,
-                      published_at: Time.now,
                       blocks: osuny_blocks
                     }
                   }
