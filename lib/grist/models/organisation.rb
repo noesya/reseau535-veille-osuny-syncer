@@ -12,14 +12,14 @@ module Grist
 
       def initialize(data)
         super(data)
-        @name = data["fields"]["Nom"]
+        @name = data["fields"]["Nom"].to_s.strip
         @departement_ids = list_values(data["fields"]["Departements"])
         @operateur_ids = list_values(data["fields"]["Operateurs"]) - [id] # On évite de se référencer soi-même
-        @address = data["fields"]["Adresse"]
-        @zipcode = data["fields"]["Code_postal"]
-        @city = data["fields"]["Ville"]
-        @email = data["fields"]["Mail"]
-        @website = data["fields"]["Site_web"]
+        @address = data["fields"]["Adresse"].to_s.strip
+        @zipcode = data["fields"]["Code_postal"].to_s.strip
+        @city = data["fields"]["Ville"].to_s.strip
+        @email = data["fields"]["Mail"].to_s.delete_prefix("mailto:")
+        @website = data["fields"]["Site_web"].to_s.strip
         @is_equipe_artistique = data["fields"]["Equipe_artistique"]
         @is_operateur = data["fields"]["Operateur"]
         @is_lieu = data["fields"]["Lieu"]
