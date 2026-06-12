@@ -4,6 +4,7 @@ require 'rubygems'
 require 'bundler/setup'
 Bundler.require(:default)
 Dotenv.load
+Bundler.require(ENV['RUBY_ENV']) if ENV['RUBY_ENV']
 
 require_relative '../lib/grist/client'
 

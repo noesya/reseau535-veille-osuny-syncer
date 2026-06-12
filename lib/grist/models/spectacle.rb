@@ -82,6 +82,16 @@ module Grist
         "<p>#{comment}</p>"
       end
 
+      def information_rows
+        @information_rows ||= begin
+          rows = []
+          rows << ["Étape", step] if step != ""
+          rows << ["Âge minimum", "#{minimum_age} ans"] if minimum_age != 0
+          rows << ["Durée", "#{duration_minutes} minutes"] if duration_minutes != 0
+          rows
+        end
+      end
+
       protected
 
       def osuny_api_klass
@@ -98,6 +108,7 @@ module Grist
                   migration_identifier: migration_identifier,
                   year: year,
                   category_ids: osuny_category_ids,
+                  full_width: false,
                   localizations: {
                     fr: {
                       migration_identifier: l10n_migration_identifier,
@@ -130,125 +141,211 @@ module Grist
       end
 
       def osuny_blocks
-        @osuny_blocks ||= [
-          block_equipes_artistiques,
-          block_information,
-          block_files,
-          block_soutiens,
-          block_video,
-          block_comment,
+        @osuny_blocks ||= begin
+          blocks = []
+          # Add all the blocks
+          blocks.concat(blocks_equipes_artistiques)
+          blocks.concat(blocks_information)
+          blocks.concat(blocks_files)
+          blocks.concat(blocks_soutiens)
+          blocks.concat(blocks_video)
+          blocks.concat(blocks_comment)
+          blocks.concat(blocks_etapes)
+          # Set the positions
+          blocks.each_with_index { |block, index|
+            block[:position] = index + 1
+          }
+          blocks
+        end
+      end
+
+      def blocks_equipes_artistiques
+        block_migration_identifier = "#{l10n_migration_identifier}-equipes-artistiques"
+        block_title_migration_identifier = "#{block_migration_identifier}-title"
+
+        return [
+          destroy_block_data(block_title_migration_identifier),
+          destroy_block_data(block_migration_identifier)
+        ] if equipes_artistiques.empty?
+
+        [
+          {
+            migration_identifier: block_title_migration_identifier,
+            title: "Création",
+            template_kind: "title",
+            data: {}
+          },
+          {
+            migration_identifier: block_migration_identifier,
+            title: "",
+            template_kind: "organizations",
+            data: {
+              mode: "selection",
+              layout: "large",
+              elements: equipes_artistiques.map { |equipe_artistique|
+                { id: equipe_artistique.osuny_id }
+              }
+            }
+          }
+        ]
+      end
+
+      def blocks_information
+        block_migration_identifier = "#{l10n_migration_identifier}-information"
+        block_title_migration_identifier = "#{block_migration_identifier}-title"
+
+        return [
+          destroy_block_data(block_title_migration_identifier),
+          destroy_block_data(block_migration_identifier)
+        ] if information_rows.empty?
+
+        [
+          {
+            migration_identifier: block_title_migration_identifier,
+            title: "Informations",
+            template_kind: "title",
+            data: {}
+          },
+          {
+            migration_identifier: block_migration_identifier,
+            title: "",
+            template_kind: "datatable",
+            data: {
+              columns: ["", ""],
+              elements: information_rows.map { |cells|
+                { cells: cells }
+              }
+            }
+          }
+        ]
+      end
+
+      def blocks_files
+        block_migration_identifier = "#{l10n_migration_identifier}-fichiers"
+        block_title_migration_identifier = "#{block_migration_identifier}-title"
+
+        return [
+          destroy_block_data(block_title_migration_identifier),
+          destroy_block_data(block_migration_identifier)
+        ] if files_url == ""
+
+        [
+          {
+            migration_identifier: block_title_migration_identifier,
+            title: "Fichiers",
+            template_kind: "title",
+            data: {}
+          },
+          {
+            migration_identifier: block_migration_identifier,
+            title: "",
+            template_kind: "call_to_action",
+            data: {
+              text: "Accéder aux fichiers liés au spectacle",
+              elements: [
+                {
+                  title: "Dossier Drive",
+                  url: files_url,
+                  target_blank: true
+                }
+              ]
+            }
+          }
+        ]
+      end
+
+      def blocks_soutiens
+        block_migration_identifier = "#{l10n_migration_identifier}-soutiens"
+        block_title_migration_identifier = "#{block_migration_identifier}-title"
+
+        return [
+          destroy_block_data(block_title_migration_identifier),
+          destroy_block_data(block_migration_identifier)
+        ] if operateurs.empty?
+
+        [
+          {
+            migration_identifier: block_title_migration_identifier,
+            title: "Soutiens",
+            template_kind: "title",
+            data: {}
+          },
+          {
+            migration_identifier: block_migration_identifier,
+            title: "",
+            template_kind: "organizations",
+            data: {
+              mode: "selection",
+              layout: "large",
+              elements: operateurs.map { |operateur|
+                { id: operateur.osuny_id }
+              }
+            }
+          }
+        ]
+      end
+
+      def blocks_video
+        block_migration_identifier = "#{l10n_migration_identifier}-video"
+        block_title_migration_identifier = "#{block_migration_identifier}-title"
+
+        return [
+          destroy_block_data(block_title_migration_identifier),
+          destroy_block_data(block_migration_identifier)
+        ] if teaser_video_url == ""
+
+        [
+          {
+            migration_identifier: block_title_migration_identifier,
+            title: "Teaser",
+            template_kind: "title",
+            data: {}
+          },
+          {
+            migration_identifier: block_migration_identifier,
+            title: "",
+            template_kind: "video",
+            data: {
+              url: teaser_video_url
+            }
+          }
+        ]
+      end
+
+      def blocks_comment
+        block_migration_identifier = "#{l10n_migration_identifier}-comment"
+        block_title_migration_identifier = "#{block_migration_identifier}-title"
+
+        return [
+          destroy_block_data(block_title_migration_identifier),
+          destroy_block_data(block_migration_identifier)
+        ] if comment == ""
+
+        [
+          {
+            migration_identifier: block_title_migration_identifier,
+            title: "Commentaire",
+            template_kind: "title",
+            data: {}
+          },
+          {
+            migration_identifier: block_migration_identifier,
+            title: "",
+            template_kind: "chapter",
+            data: {
+              text: comment_html
+            }
+          }
+        ]
+      end
+
+      def blocks_etapes
+        [
           block_etapes_title,
           block_etapes_tableau,
           block_etapes_lieux,
           block_etapes_operateurs
-        ].compact
-      end
-
-      def block_equipes_artistiques
-        block_migration_identifier = "#{l10n_migration_identifier}-equipes-artistiques"
-        return destroy_block_data(block_migration_identifier) if equipes_artistiques.empty?
-        {
-          migration_identifier: block_migration_identifier,
-          position: 1,
-          title: "Création",
-          template_kind: "organizations",
-          data: {
-            mode: "selection",
-            layout: "large",
-            elements: equipes_artistiques.map { |equipe_artistique|
-              { id: equipe_artistique.osuny_id }
-            }
-          }
-        }
-      end
-
-      def block_information
-        block_migration_identifier = "#{l10n_migration_identifier}-information"
-        rows = []
-        rows << ["Étape", step] if step != ""
-        rows << ["Âge minimum", "#{minimum_age} ans"] if minimum_age != 0
-        rows << ["Durée", "#{duration_minutes} minutes"] if duration_minutes != 0
-        return destroy_block_data(block_migration_identifier) if rows.empty?
-
-        {
-          migration_identifier: block_migration_identifier,
-          position: 2,
-          title: "Informations",
-          template_kind: "datatable",
-          data: {
-            columns: ["", ""],
-            elements: rows.map { |cells|
-              { cells: cells }
-            }
-          }
-        }
-      end
-
-      def block_files
-        block_migration_identifier = "#{l10n_migration_identifier}-fichiers"
-        return destroy_block_data(block_migration_identifier) if files_url == ""
-        {
-          migration_identifier: block_migration_identifier,
-          position: 3,
-          title: "Fichiers",
-          template_kind: "call_to_action",
-          data: {
-            text: "Accéder aux fichiers liés au spectacle",
-            elements: [
-              {
-                title: "Dossier Drive",
-                url: files_url,
-                target_blank: true
-              }
-            ]
-          }
-        }
-      end
-
-      def block_soutiens
-        block_migration_identifier = "#{l10n_migration_identifier}-soutiens"
-        return destroy_block_data(block_migration_identifier) if operateurs.empty?
-        {
-          migration_identifier: block_migration_identifier,
-          position: 4,
-          title: "Soutiens",
-          template_kind: "organizations",
-          data: {
-            mode: "selection",
-            layout: "large",
-            elements: operateurs.map { |operateur|
-              { id: operateur.osuny_id }
-            }
-          }
-        }
-      end
-
-      def block_video
-        block_migration_identifier = "#{l10n_migration_identifier}-video"
-        return destroy_block_data(block_migration_identifier) if teaser_video_url == ""
-        {
-          migration_identifier: block_migration_identifier,
-          position: 5,
-          title: "Teaser",
-          template_kind: "video",
-          data: {
-            url: teaser_video_url
-          }
-        }
-      end
-
-      def block_comment
-        block_migration_identifier = "#{l10n_migration_identifier}-comment"
-        return destroy_block_data(block_migration_identifier) if comment == ""
-        {
-          migration_identifier: block_migration_identifier,
-          position: 6,
-          title: "Commentaire",
-          template_kind: "chapter",
-          data: {
-            text: comment_html
-          }
-        }
+        ]
       end
 
       def block_etapes_title
@@ -256,7 +353,6 @@ module Grist
         return destroy_block_data(block_migration_identifier) if etapes.empty?
         {
           migration_identifier: block_migration_identifier,
-          position: 7,
           title: "Vie du spectacle",
           template_kind: "title",
           data: {}
@@ -269,8 +365,7 @@ module Grist
 
         {
           migration_identifier: block_migration_identifier,
-          position: 8,
-          title: "Vie du spectacle",
+          title: "",
           template_kind: "timeline",
           data: {
             layout: "vertical",
@@ -286,12 +381,11 @@ module Grist
 
       def block_etapes_lieux
         block_migration_identifier = "#{l10n_migration_identifier}-etapes-lieux"
-        return destroy_block_data(block_migration_identifier) if etapes.empty?
         lieux = etapes.collect(&:lieu).compact.uniq
+        return destroy_block_data(block_migration_identifier) if etapes.empty? || lieux.empty?
 
         {
           migration_identifier: block_migration_identifier,
-          position: 9,
           title: "Lieux",
           template_kind: "organizations",
           data: {
@@ -307,12 +401,11 @@ module Grist
 
       def block_etapes_operateurs
         block_migration_identifier = "#{l10n_migration_identifier}-etapes-operateurs"
-        return destroy_block_data(block_migration_identifier) if etapes.empty?
-        operateurs = etapes.flat_map(&:operateurs).compact.uniq
+        operateurs = etapes.collect(&:operateurs).flatten.compact.uniq
+        return destroy_block_data(block_migration_identifier) if etapes.empty? || operateurs.empty?
 
         {
           migration_identifier: block_migration_identifier,
-          position: 10,
           title: "Opérateurs",
           template_kind: "organizations",
           data: {
