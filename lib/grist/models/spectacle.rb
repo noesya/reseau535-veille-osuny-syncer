@@ -276,7 +276,7 @@ module Grist
             template_kind: "organizations",
             data: {
               mode: "selection",
-              layout: "large",
+              layout: "grid",
               elements: operateurs.map { |operateur|
                 { id: operateur.osuny_id }
               }
@@ -390,7 +390,7 @@ module Grist
           template_kind: "organizations",
           data: {
             mode: "selection",
-            layout: "large",
+            layout: "grid",
             alphabetical: true,
             elements: lieux.map { |lieu|
               { id: lieu.osuny_id }
@@ -410,7 +410,7 @@ module Grist
           template_kind: "organizations",
           data: {
             mode: "selection",
-            layout: "large",
+            layout: "grid",
             alphabetical: true,
             elements: operateurs.map { |operateur|
               { id: operateur.osuny_id }
