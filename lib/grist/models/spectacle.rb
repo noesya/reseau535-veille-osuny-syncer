@@ -13,8 +13,8 @@ module Grist
 
       def initialize(data)
         super(data)
-        @title = data["fields"]["Titre"]
-        @subtitle = data["fields"]["Sous_titre"]
+        @title = data["fields"]["Titre"].to_s.strip
+        @subtitle = data["fields"]["Sous_titre"].to_s.strip
         @equipe_artistique_ids = list_values(data["fields"]["Createurices"])
         @synopsis = data["fields"]["Synopsis"].to_s.strip
         @year = data["fields"]["Annee"]
@@ -74,6 +74,14 @@ module Grist
         end
       end
 
+      def synopsis_html
+        "<p>#{synopsis}</p>"
+      end
+
+      def comment_html
+        "<p>#{comment}</p>"
+      end
+
       protected
 
       def osuny_api_klass
@@ -95,7 +103,7 @@ module Grist
                       migration_identifier: l10n_migration_identifier,
                       title: title,
                       subtitle: subtitle,
-                      summary: "<p>#{synopsis}</p>",
+                      summary: synopsis_html,
                       featured_image: { url: featured_image_url },
                       published: true,
                       blocks: osuny_blocks
@@ -238,7 +246,7 @@ module Grist
           title: "Commentaire",
           template_kind: "chapter",
           data: {
-            text: "<p>#{comment}</p>"
+            text: comment_html
           }
         }
       end
@@ -259,26 +267,18 @@ module Grist
         block_migration_identifier = "#{l10n_migration_identifier}-etapes-tableau"
         return destroy_block_data(block_migration_identifier) if etapes.empty?
 
-        rows = etapes.map { |etape|
-          [
-            etape.lieu&.name.to_s,
-            etape.operateurs.map(&:name).join(", "),
-            format_date(etape.start_date),
-            format_date(etape.end_date),
-            etape.state,
-            etape.comment
-          ]
-        }
-
         {
           migration_identifier: block_migration_identifier,
           position: 8,
           title: "Vie du spectacle",
-          template_kind: "datatable",
+          template_kind: "timeline",
           data: {
-            columns: ["Lieu", "Opérateurs", "Début", "Fin", "État", "Commentaire"],
-            elements: rows.map { |cells|
-              { cells: cells }
+            layout: "vertical",
+            elements: etapes.map { |etape|
+              {
+                title: etape.timeline_title,
+                text: etape.timeline_text
+              }
             }
           }
         }
