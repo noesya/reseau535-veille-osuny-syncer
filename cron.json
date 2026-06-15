@@ -1,7 +1,7 @@
 {
   "jobs": [
     {
-      "command": "0 0 * * * bin/sync",
+      "command": "0 2,16 * * * bin/sync",
       "size": "S"
     }
   ]
