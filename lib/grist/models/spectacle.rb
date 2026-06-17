@@ -25,8 +25,8 @@ module Grist
         @duration_minutes = data["fields"]["Duree_en_minutes_"]
         @featured_image_url = data["fields"]["Affiche_url_de_l_image_"]
         @teaser_video_url = data["fields"]["Teaser_url_Youtube_"].to_s.strip
-        @files_url = data["fields"]["Lien_vers_les_fichiers"].to_s.strip
-        @operateur_ids = list_values(data["fields"]["Soutiens"])
+        @files_url = data["fields"]["Documentation"].to_s.strip
+        @operateur_ids = list_values(data["fields"]["Membres_soutiens"])
         @comment = data["fields"]["Commentaire_public"].to_s.strip
       end
 
@@ -391,7 +391,7 @@ module Grist
           data: {
             mode: "selection",
             layout: "grid",
-            alphabetical: true,
+            # alphabetical: true,
             elements: lieux.map { |lieu|
               { id: lieu.osuny_id }
             }
@@ -411,7 +411,7 @@ module Grist
           data: {
             mode: "selection",
             layout: "grid",
-            alphabetical: true,
+            # alphabetical: true,
             elements: operateurs.map { |operateur|
               { id: operateur.osuny_id }
             }
