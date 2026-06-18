@@ -4,7 +4,7 @@ module Grist
       attr_reader :title, :subtitle, :equipe_artistique_ids, :synopsis, :year, :step,
                   :discipline_ids, :thematiques_ids, :minimum_age, :duration_minutes,
                   :featured_image_url, :teaser_video_url, :files_url,
-                  :operateur_ids, :comment
+                  :operateur_ids, :comment, :is_archive
       attr_accessor :equipes_artistiques, :disciplines, :thematiques, :operateurs, :etapes
 
       def self.table_name
@@ -28,6 +28,7 @@ module Grist
         @files_url = data["fields"]["Documentation"].to_s.strip
         @operateur_ids = list_values(data["fields"]["Membres_soutiens"])
         @comment = data["fields"]["Commentaire_public"].to_s.strip
+        @is_archive = data["fields"]["Mis_en_archive"]
       end
 
       def to_s
@@ -116,7 +117,7 @@ module Grist
                       subtitle: subtitle,
                       summary: synopsis_html,
                       featured_image: { url: featured_image_url },
-                      published: true,
+                      published: !is_archive,
                       blocks: osuny_blocks
                     }
                   }
