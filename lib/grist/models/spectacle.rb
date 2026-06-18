@@ -24,6 +24,7 @@ module Grist
         @minimum_age = data["fields"]["Age_minimum"]
         @duration_minutes = data["fields"]["Duree_en_minutes_"]
         @featured_image_url = data["fields"]["Affiche_url_de_l_image_"]
+        @featured_image_url = nil unless valid_featured_image_url?
         @teaser_video_url = data["fields"]["Teaser_url_Youtube_"].to_s.strip
         @files_url = data["fields"]["Documentation"].to_s.strip
         @operateur_ids = list_values(data["fields"]["Membres_soutiens"])
@@ -418,6 +419,17 @@ module Grist
             }
           }
         }
+      end
+
+      def valid_featured_image_url?
+        uri = URI(url)
+        request = Net::HTTP::Head.new(uri)
+        response = Net::HTTP.start(request.uri.hostname, request.uri.port, use_ssl: request.uri.scheme == 'https') do |http|
+          http.request(request)
+        end
+        response['Content-Type'].start_with?('image/')
+      rescue URI::InvalidURIError, SocketError, Errno::ECONNREFUSED, Errno::ETIMEDOUT
+        false
       end
     end
   end
