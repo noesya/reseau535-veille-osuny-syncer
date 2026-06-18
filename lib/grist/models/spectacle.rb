@@ -233,7 +233,7 @@ module Grist
         [
           {
             migration_identifier: block_title_migration_identifier,
-            title: "Fichiers",
+            title: "Documentation",
             template_kind: "title",
             data: {}
           },
@@ -242,7 +242,7 @@ module Grist
             title: "",
             template_kind: "call_to_action",
             data: {
-              text: "Accéder aux fichiers liés au spectacle",
+              text: "Accéder à la documentation liée au spectacle",
               elements: [
                 {
                   title: "Dossier Drive",
