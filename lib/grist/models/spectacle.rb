@@ -391,7 +391,7 @@ module Grist
           data: {
             mode: "selection",
             layout: "grid",
-            # alphabetical: true,
+            alphabetical: true,
             elements: lieux.map { |lieu|
               { id: lieu.osuny_id }
             }
@@ -411,7 +411,7 @@ module Grist
           data: {
             mode: "selection",
             layout: "grid",
-            # alphabetical: true,
+            alphabetical: true,
             elements: operateurs.map { |operateur|
               { id: operateur.osuny_id }
             }
