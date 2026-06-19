@@ -16,15 +16,32 @@ OsunyApi.configure do |config|
   # config.debugging = true
 end
 
+models_scope = ARGV[0] == "--all" ? :all : :recently_updated
+if models_scope == :all
+  puts "Synchronisation de tous les modèles."
+else
+  puts "Synchronisation des modèles récemment mis à jour."
+end
+
+def sync_model(klass, scope)
+  records = klass.public_send(scope)
+  if scope == :all
+    # Sync all
+    puts "[#{klass.name.split('::').last}] #{records.count} éléments."
+  else
+    # Sync recentlty updated
+    puts "[#{klass.name.split('::').last}] #{records.count} éléments récemment mis à jour (total: #{klass.all.count})."
+  end
+  records.each(&:sync_to_osuny)
+end
+
 [
-  # Grist::Models::Departement,
-  # Grist::Models::Discipline,
-  # Grist::Models::Thematique,
-  # Grist::Models::Spectacle::Etat,
-  # Grist::Models::Organisation,
+  Grist::Models::Departement,
+  Grist::Models::Discipline,
+  Grist::Models::Thematique,
+  Grist::Models::Spectacle::Etat,
+  Grist::Models::Organisation,
   Grist::Models::Spectacle
 ].each do |klass|
-  recently_updated_records = klass.all
-  puts "[#{klass.name.split('::').last}] #{recently_updated_records.count} éléments récemment mis à jour (total: #{klass.all.count})."
-  recently_updated_records.each(&:sync_to_osuny)
+  sync_model(klass, models_scope)
 end
