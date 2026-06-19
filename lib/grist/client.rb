@@ -5,6 +5,7 @@ require_relative 'models/thematique'
 require_relative 'models/organisation'
 require_relative 'models/spectacle'
 require_relative 'models/spectacle/etape'
+require_relative 'models/spectacle/etat'
 
 module Grist
   class Client

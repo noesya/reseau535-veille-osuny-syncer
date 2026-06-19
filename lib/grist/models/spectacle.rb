@@ -1,11 +1,12 @@
 module Grist
   module Models
     class Spectacle < Base
-      attr_reader :title, :subtitle, :equipe_artistique_ids, :synopsis, :year, :step,
-                  :discipline_ids, :thematiques_ids, :minimum_age, :duration_minutes,
+      attr_reader :title, :equipe_artistique_ids, :synopsis, :presentation, :year,
+                  :state_id, :discipline_ids, :thematiques_ids,
+                  :minimum_age, :duration_minutes, :ideal_playground, :details, :technical_needs,
                   :featured_image_url, :teaser_video_url, :files_url,
-                  :operateur_ids, :comment, :is_archive
-      attr_accessor :equipes_artistiques, :disciplines, :thematiques, :operateurs, :etapes
+                  :is_archive
+      attr_accessor :equipes_artistiques, :disciplines, :thematiques, :etapes
 
       def self.table_name
         "Spectacles"
@@ -14,20 +15,21 @@ module Grist
       def initialize(data)
         super(data)
         @title = data["fields"]["Titre"].to_s.strip
-        @subtitle = data["fields"]["Sous_titre"].to_s.strip
         @equipe_artistique_ids = list_values(data["fields"]["Createurices"])
         @synopsis = data["fields"]["Synopsis"].to_s.strip
+        @presentation = data["fields"]["Presentation"].to_s.strip
         @year = data["fields"]["Annee"]
-        @step = data["fields"]["Etape"].to_s.strip
+        @state_id = data["fields"]["Etat"]
         @discipline_ids = list_values(data["fields"]["Disciplines"])
         @thematiques_ids = list_values(data["fields"]["Thematiques"])
         @minimum_age = data["fields"]["Age_minimum"]
         @duration_minutes = data["fields"]["Duree_en_minutes_"]
+        @ideal_playground = data["fields"]["Espace_de_jeu_ideal"].to_s.strip
+        @details = data["fields"]["Precisions"].to_s.strip
+        @technical_needs = data["fields"]["Besoins_techniques"].to_s.strip
         @featured_image_url = data["fields"]["Affiche_url_de_l_image_"]
         @teaser_video_url = data["fields"]["Teaser_url_Youtube_"].to_s.strip
         @files_url = data["fields"]["Documentation"].to_s.strip
-        @operateur_ids = list_values(data["fields"]["Membres_soutiens"])
-        @comment = data["fields"]["Commentaire_public"].to_s.strip
         @is_archive = data["fields"]["Mis_en_archive"]
       end
 
@@ -37,6 +39,11 @@ module Grist
 
       def migration_identifier
         "project-spectacle-#{id}"
+      end
+
+      def state
+        return unless state_id
+        @state ||= Spectacle::Etat.find(state_id)
       end
 
       def equipes_artistiques
@@ -57,10 +64,11 @@ module Grist
         }.compact
       end
 
-      def operateurs
-        @operateurs ||= operateur_ids.map { |operateur_id|
-          Organisation.find(operateur_id)
-        }.compact
+      def supporting_operateurs
+        @supporting_operateurs ||= begin
+          residency_etapes = etapes.select { |etape| etape.state == "Résidence" }
+          residency_etapes.map(&:operateurs).flatten.compact
+        end
       end
 
       def etapes
@@ -69,26 +77,35 @@ module Grist
             etape.spectacle_id == id
           }
           unordered_etapes.sort_by { |etape|
-            etape.start_date.nil? ? Float::INFINITY
-                                  : etape.start_date.to_time.to_i
+            etape.start_date.nil? ? -Float::INFINITY
+                                  : -etape.start_date.to_time.to_i
           }
         end
+      end
+
+      def subtitle
+        equipes_artistiques.map(&:to_s).join(", ")
+      end
+
+      def presentation_html
+        "<p>#{presentation}</p>"
       end
 
       def synopsis_html
         "<p>#{synopsis}</p>"
       end
 
-      def comment_html
-        "<p>#{comment}</p>"
+      def technical_needs_html
+        "<p>#{technical_needs}</p>"
       end
 
       def information_rows
         @information_rows ||= begin
           rows = []
-          rows << ["Étape", step] if step != ""
           rows << ["Âge minimum", "#{minimum_age} ans"] if minimum_age != 0
           rows << ["Durée", "#{duration_minutes} minutes"] if duration_minutes != 0
+          rows << ["Terrain de jeu idéal", ideal_playground] if ideal_playground != ""
+          rows << ["Précisions", details] if details != ""
           rows
         end
       end
@@ -138,13 +155,20 @@ module Grist
       end
 
       def osuny_category_ids
-        @osuny_category_ids ||= disciplines.map(&:osuny_id) + thematiques.map(&:osuny_id)
+        @osuny_category_ids ||= begin
+          category_ids = []
+          category_ids << state.osuny_id if state
+          category_ids.concat(disciplines.map(&:osuny_id))
+          category_ids.concat(thematiques.map(&:osuny_id))
+          category_ids
+        end
       end
 
       def osuny_blocks
         @osuny_blocks ||= begin
           blocks = []
           # Add all the blocks
+          blocks << block_presentation
           blocks.concat(blocks_equipes_artistiques)
           blocks.concat(blocks_information)
           blocks.concat(blocks_files)
@@ -158,6 +182,20 @@ module Grist
           }
           blocks
         end
+      end
+
+      def block_presentation
+        block_migration_identifier = "#{l10n_migration_identifier}-presentation"
+        return destroy_block_data(block_migration_identifier) if presentation == ""
+
+        {
+          migration_identifier: block_migration_identifier,
+          title: "Présentation",
+          template_kind: "chapter",
+          data: {
+            text: presentation_html
+          }
+        }
       end
 
       def blocks_equipes_artistiques
@@ -194,20 +232,27 @@ module Grist
       def blocks_information
         block_migration_identifier = "#{l10n_migration_identifier}-information"
         block_title_migration_identifier = "#{block_migration_identifier}-title"
+        block_technical_needs_migration_identifier = "#{l10n_migration_identifier}-besoins-techniques"
 
         return [
           destroy_block_data(block_title_migration_identifier),
-          destroy_block_data(block_migration_identifier)
-        ] if information_rows.empty?
+          destroy_block_data(block_migration_identifier),
+          destroy_block_data(block_technical_needs_migration_identifier)
+        ] if information_rows.empty? && technical_needs == ""
 
-        [
+        blocks = [
           {
             migration_identifier: block_title_migration_identifier,
             title: "Informations",
             template_kind: "title",
             data: {}
-          },
-          {
+          }
+        ]
+
+        if information_rows.empty?
+          blocks << destroy_block_data(block_migration_identifier)
+        else
+          blocks << {
             migration_identifier: block_migration_identifier,
             title: "",
             template_kind: "datatable",
@@ -218,7 +263,22 @@ module Grist
               }
             }
           }
-        ]
+        end
+
+        if technical_needs == ""
+          blocks << destroy_block_data(block_technical_needs_migration_identifier)
+        else
+          blocks << {
+            migration_identifier: block_technical_needs_migration_identifier,
+            title: "Besoins techniques",
+            template_kind: "chapter",
+            data: {
+              text: technical_needs_html
+            }
+          }
+        end
+
+        blocks
       end
 
       def blocks_files
@@ -242,7 +302,8 @@ module Grist
             title: "",
             template_kind: "call_to_action",
             data: {
-              text: "Accéder à la documentation liée au spectacle",
+              layout: "no_background",
+              text: "",
               elements: [
                 {
                   title: "Dossier Drive",
@@ -262,7 +323,7 @@ module Grist
         return [
           destroy_block_data(block_title_migration_identifier),
           destroy_block_data(block_migration_identifier)
-        ] if operateurs.empty?
+        ] if supporting_operateurs.empty?
 
         [
           {
@@ -278,7 +339,7 @@ module Grist
             data: {
               mode: "selection",
               layout: "grid",
-              elements: operateurs.map { |operateur|
+              elements: supporting_operateurs.map { |operateur|
                 { id: operateur.osuny_id }
               }
             }
@@ -313,6 +374,8 @@ module Grist
         ]
       end
 
+      # LEGACY
+      # TODO: Remove when blocks are removed on production
       def blocks_comment
         block_migration_identifier = "#{l10n_migration_identifier}-comment"
         block_title_migration_identifier = "#{block_migration_identifier}-title"
@@ -320,23 +383,6 @@ module Grist
         return [
           destroy_block_data(block_title_migration_identifier),
           destroy_block_data(block_migration_identifier)
-        ] if comment == ""
-
-        [
-          {
-            migration_identifier: block_title_migration_identifier,
-            title: "Commentaire",
-            template_kind: "title",
-            data: {}
-          },
-          {
-            migration_identifier: block_migration_identifier,
-            title: "",
-            template_kind: "chapter",
-            data: {
-              text: comment_html
-            }
-          }
         ]
       end
 

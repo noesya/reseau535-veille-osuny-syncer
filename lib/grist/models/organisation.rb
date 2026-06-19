@@ -3,7 +3,8 @@ module Grist
     class Organisation < Base
       attr_reader :name, :departement_ids, :operateur_ids,
                   :address, :zipcode, :city, :email, :website,
-                  :is_equipe_artistique, :is_operateur, :is_lieu, :is_membre_535
+                  :is_equipe_artistique, :is_operateur, :is_lieu, :is_membre_535,
+                  :summary, :text
       attr_accessor :departements, :operateurs, :operating_organisations
 
       def self.table_name
@@ -24,6 +25,8 @@ module Grist
         @is_operateur = data["fields"]["Operateur"]
         @is_lieu = data["fields"]["Lieu"]
         @is_membre_535 = data["fields"]["Membre_535"]
+        @summary = data["fields"]["Resume"].to_s.strip
+        @text = data["fields"]["Texte"].to_s.strip
       end
 
       def to_s
@@ -52,6 +55,14 @@ module Grist
         }
       end
 
+      def summary_html
+        "<p>#{summary}</p>"
+      end
+
+      def text_html
+        "<p>#{text}</p>"
+      end
+
       protected
 
       def osuny_api_klass
@@ -73,6 +84,8 @@ module Grist
                   fr: {
                     migration_identifier: l10n_migration_identifier,
                     name: name,
+                    summary: summary_html,
+                    text: text_html,
                     url: website
                   }
                 }

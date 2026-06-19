@@ -29,7 +29,15 @@ module Grist
       end
 
       def timeline_title
-        @timeline_title ||= start_date.nil? ? "Date non définie" : format_date(start_date)
+        @timeline_title ||= begin
+          if start_date.nil?
+            "Date non définie"
+          elsif end_date && start_date != end_date
+            "#{format_date(start_date)} - #{format_date(end_date)}"
+          else
+            format_date(start_date)
+          end
+        end
       end
 
       def timeline_text
@@ -56,11 +64,10 @@ module Grist
       def timeline_text_parts
         @timeline_text_parts ||= begin
           parts = []
+          parts << state if state
+          parts << comment if comment != ""
+          parts << "#{operateurs.map(&:name).join(", ")}" if operateurs.any?
           parts << "Lieu : #{lieu.name}" if lieu
-          parts << "Opérateurs : #{operateurs.map(&:name).join(", ")}" if operateurs.any?
-          parts << "État : #{state}" if state
-          parts << "Fin : #{format_date(end_date)}" if end_date
-          parts << "Commentaire : #{comment}" if comment != ""
           parts
         end
       end
