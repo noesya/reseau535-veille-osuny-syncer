@@ -27,7 +27,8 @@ module Grist
         @ideal_playground = data["fields"]["Espace_de_jeu_ideal"].to_s.strip
         @details = data["fields"]["Precisions"].to_s.strip
         @technical_needs = data["fields"]["Besoins_techniques"].to_s.strip
-        @featured_image_url = data["fields"]["Affiche_url_de_l_image_"]
+        # Unescape the URL as osuny will escape it on its side
+        @featured_image_url = URI::Parser.new.unescape(data["fields"]["Affiche_url_de_l_image_"].to_s)
         @teaser_video_url = data["fields"]["Teaser_url_Youtube_"].to_s.strip
         @files_url = data["fields"]["Documentation"].to_s.strip
         @is_archive = data["fields"]["Mis_en_archive"]
