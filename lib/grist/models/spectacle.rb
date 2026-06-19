@@ -191,7 +191,7 @@ module Grist
 
         {
           migration_identifier: block_migration_identifier,
-          title: "Présentation",
+          title: "",
           template_kind: "chapter",
           data: {
             text: presentation_html
