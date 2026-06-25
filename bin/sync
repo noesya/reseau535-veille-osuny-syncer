@@ -40,7 +40,9 @@ end
   Grist::Models::Discipline,
   Grist::Models::Thematique,
   Grist::Models::Spectacle::Etat,
+  Grist::Models::Spectacle::Etape::Etat,
   Grist::Models::Organisation,
+  Grist::Models::Spectacle::Etape,
   Grist::Models::Spectacle
 ].each do |klass|
   sync_model(klass, models_scope)

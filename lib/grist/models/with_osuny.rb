@@ -17,7 +17,7 @@ module Grist
           @osuny_id = osuny_record[:id]
         else
           # L'objet n'est pas dans osuny, on le synchronise, l'ID sera assigné automatiquement
-          sync_to_osuny
+          sync_to_osuny(minimal: true)
         end
         @osuny_id
       end
@@ -30,9 +30,10 @@ module Grist
         raise e
       end
 
-      def sync_to_osuny
+      def sync_to_osuny(minimal: false)
         puts "[#{self.class.name.split('::').last}] Synchronisation de « #{to_s} » vers osuny..."
-        response_data = osuny_api_upsert.first
+        response_data = minimal ? osuny_api_minimal_upsert.first
+                                : osuny_api_upsert.first
         osuny_record_id = response_data.dig(:created, 0, :id) || response_data.dig(:updated, 0, :id)
         @osuny_id = osuny_record_id
       rescue OsunyApi::ApiError => e
@@ -51,6 +52,11 @@ module Grist
 
       def osuny_api_upsert
         raise NoMethodError, "You must implement the #{self.class.name}.osuny_api_upsert instance method"
+      end
+
+      # Overridable to make minimal upserts
+      def osuny_api_minimal_upsert
+        osuny_api_upsert
       end
 
       def osuny_api_get

@@ -67,7 +67,7 @@ module Grist
 
       def supporting_operateurs
         @supporting_operateurs ||= begin
-          residency_etapes = etapes.select { |etape| etape.state == "Résidence" }
+          residency_etapes = etapes.select { |etape| etape.etat.to_s == "Résidence" }
           residency_etapes.map(&:operateurs).flatten.compact
         end
       end
@@ -82,6 +82,10 @@ module Grist
                                   : -etape.start_date.to_time.to_i
           }
         end
+      end
+
+      def dated_etapes
+        @dated_etapes ||= etapes.select(&:dated?)
       end
 
       def subtitle
@@ -147,6 +151,35 @@ module Grist
         )
       end
 
+      # Minimal upsert to sync etapes
+      # Unpublished, without featured image, categories and blocks
+      def osuny_api_minimal_upsert
+        osuny_api_instance.communication_websites_website_id_portfolio_projects_upsert_post_with_http_info(
+          ENV["OSUNY_WEBSITE_ID"],
+          {
+            body: {
+              projects: [
+                {
+                  migration_identifier: migration_identifier,
+                  year: year,
+                  full_width: false,
+                  localizations: {
+                    fr: {
+                      migration_identifier: l10n_migration_identifier,
+                      title: title,
+                      subtitle: subtitle,
+                      summary: synopsis_html,
+                      published: false
+                    }
+                  }
+                }
+              ]
+            },
+            return_type: 'Object'
+          }
+        )
+      end
+
       def osuny_api_get
         osuny_api_instance.communication_websites_website_id_portfolio_projects_id_get_with_http_info(
           ENV["OSUNY_WEBSITE_ID"],
@@ -193,6 +226,7 @@ module Grist
           migration_identifier: block_migration_identifier,
           title: "",
           template_kind: "chapter",
+          layout: "accent_background",
           data: {
             text: presentation_html
           }
@@ -390,9 +424,10 @@ module Grist
       def blocks_etapes
         [
           block_etapes_title,
-          block_etapes_tableau,
-          block_etapes_lieux,
-          block_etapes_operateurs
+          block_etapes_list,
+          block_etapes_tableau, # Legacy, remove after destroy sync
+          block_etapes_lieux, # Legacy, remove after destroy sync
+          block_etapes_operateurs # Legacy, remove after destroy sync
         ]
       end
 
@@ -407,64 +442,43 @@ module Grist
         }
       end
 
-      def block_etapes_tableau
-        block_migration_identifier = "#{l10n_migration_identifier}-etapes-tableau"
-        return destroy_block_data(block_migration_identifier) if etapes.empty?
+      def block_etapes_list
+        block_migration_identifier = "#{l10n_migration_identifier}-etapes-list"
+        return destroy_block_data(block_migration_identifier) if dated_etapes.empty?
 
         {
           migration_identifier: block_migration_identifier,
           title: "",
-          template_kind: "timeline",
+          template_kind: "agenda",
           data: {
-            layout: "vertical",
-            elements: etapes.map { |etape|
-              {
-                title: etape.timeline_title,
-                text: etape.timeline_text
-              }
+            layout: "list",
+            mode: "selection",
+            option_categories: true,
+            option_dates: true,
+            option_image: true,
+            option_subtitle: false,
+            option_summary: true,
+            option_status: false,
+            elements: dated_etapes.map { |etape|
+              { id: etape.osuny_id }
             }
           }
         }
+      end
+
+      def block_etapes_tableau
+        block_migration_identifier = "#{l10n_migration_identifier}-etapes-tableau"
+        destroy_block_data(block_migration_identifier)
       end
 
       def block_etapes_lieux
         block_migration_identifier = "#{l10n_migration_identifier}-etapes-lieux"
-        lieux = etapes.collect(&:lieu).compact.uniq
-        return destroy_block_data(block_migration_identifier) if etapes.empty? || lieux.empty?
-
-        {
-          migration_identifier: block_migration_identifier,
-          title: "Lieux",
-          template_kind: "organizations",
-          data: {
-            mode: "selection",
-            layout: "grid",
-            alphabetical: true,
-            elements: lieux.map { |lieu|
-              { id: lieu.osuny_id }
-            }
-          }
-        }
+        destroy_block_data(block_migration_identifier)
       end
 
       def block_etapes_operateurs
         block_migration_identifier = "#{l10n_migration_identifier}-etapes-operateurs"
-        operateurs = etapes.collect(&:operateurs).flatten.compact.uniq
-        return destroy_block_data(block_migration_identifier) if etapes.empty? || operateurs.empty?
-
-        {
-          migration_identifier: block_migration_identifier,
-          title: "Opérateurs",
-          template_kind: "organizations",
-          data: {
-            mode: "selection",
-            layout: "grid",
-            alphabetical: true,
-            elements: operateurs.map { |operateur|
-              { id: operateur.osuny_id }
-            }
-          }
-        }
+        destroy_block_data(block_migration_identifier)
       end
     end
   end

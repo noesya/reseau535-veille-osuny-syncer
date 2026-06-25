@@ -2,8 +2,8 @@ module Grist
   module Models
     class Spectacle::Etape < Base
       attr_reader :spectacle_id, :lieu_id, :operateur_ids,
-                  :start_date, :end_date, :state, :comment
-      attr_accessor :lieu, :operateurs
+                  :start_date, :end_date, :etat_id, :comment
+      attr_accessor :spectacle, :lieu, :operateurs, :etat
 
       def self.table_name
         "Etapes"
@@ -16,7 +16,7 @@ module Grist
         @operateur_ids = list_values(data["fields"]["Operateurs"])
         @start_date = date_value(data["fields"]["Debut"])
         @end_date = date_value(data["fields"]["Fin"])
-        @state = data["fields"]["Etat"]
+        @etat_id = data["fields"]["Etat"]
         @comment = data["fields"]["Commentaire_public"].to_s.strip
       end
 
@@ -26,23 +26,6 @@ module Grist
 
       def migration_identifier
         "spectacle-etape-#{id}"
-      end
-
-      def timeline_title
-        @timeline_title ||= begin
-          if start_date.nil?
-            "Date non définie"
-          elsif end_date && start_date != end_date
-            "#{format_date(start_date)} - #{format_date(end_date)}"
-          else
-            format_date(start_date)
-          end
-        end
-      end
-
-      def timeline_text
-        return "" if timeline_text_parts.empty?
-        @timeline_text ||= "<p>#{timeline_text_parts.join("<br>")}</p>"
       end
 
       def spectacle
@@ -59,17 +42,203 @@ module Grist
         }.compact
       end
 
+      def etat
+        @etat ||= Spectacle::Etape::Etat.find(etat_id)
+      end
+
+      def summary
+        return if lieu.nil? && operateurs.empty?
+        @summary ||= begin
+          operateurs_sentence = operateurs.map(&:to_s).join(', ')
+          if lieu.nil?
+            operateurs_sentence
+          else
+            "#{lieu} (#{operateurs_sentence})"
+          end
+        end
+      end
+
+      def comment_html
+        "<p>#{comment}</p>"
+      end
+
+      def dated?
+        start_date && end_date
+      end
+
+      def sync_to_osuny(minimal: false)
+        # On ne synchronise que les étapes avec des dates
+        super if spectacle && dated?
+      end
+
       protected
 
-      def timeline_text_parts
-        @timeline_text_parts ||= begin
-          parts = []
-          parts << state if state
-          parts << comment if comment != ""
-          parts << "#{operateurs.map(&:name).join(", ")}" if operateurs.any?
-          parts << "Lieu : #{lieu.name}" if lieu
-          parts
+      def osuny_api_klass
+        OsunyApi::CommunicationWebsiteAgendaEventApi
+      end
+
+      def osuny_api_upsert
+        osuny_api_instance.communication_websites_website_id_agenda_events_upsert_post_with_http_info(
+          ENV["OSUNY_WEBSITE_ID"],
+          {
+            body: {
+              events: [
+                {
+                  migration_identifier: migration_identifier,
+                  from_day: start_date,
+                  to_day: end_date,
+                  category_ids: osuny_category_ids,
+                  localizations: {
+                    fr: {
+                      migration_identifier: l10n_migration_identifier,
+                      title: spectacle.title,
+                      subtitle: spectacle.subtitle,
+                      summary: summary,
+                      featured_image: { url: spectacle.featured_image_url },
+                      published: true,
+                      blocks: osuny_blocks
+                    }
+                  }
+                }
+              ]
+            },
+            return_type: 'Object'
+          }
+        )
+      end
+
+      def osuny_api_get
+        osuny_api_instance.communication_websites_website_id_agenda_events_id_get_with_http_info(
+          ENV["OSUNY_WEBSITE_ID"],
+          migration_identifier,
+          { return_type: 'Object' }
+        )
+      end
+
+      def osuny_category_ids
+        @osuny_category_ids ||= [etat&.osuny_id].compact
+      end
+
+      def osuny_blocks
+        @osuny_blocks ||= begin
+          blocks = []
+          # Add all the blocks
+          blocks << block_comment
+          blocks.concat(blocks_spectacle)
+          blocks.concat(blocks_lieu)
+          blocks.concat(blocks_operateurs)
+          # Set the positions
+          blocks.each_with_index { |block, index|
+            block[:position] = index + 1
+          }
+          blocks
         end
+      end
+
+      def block_comment
+        block_migration_identifier = "#{l10n_migration_identifier}-comment"
+        return destroy_block_data(block_migration_identifier) if comment == ""
+
+        {
+          migration_identifier: block_migration_identifier,
+          title: "",
+          template_kind: "chapter",
+          layout: "accent_background",
+          data: {
+            text: comment_html
+          }
+        }
+      end
+
+      def blocks_spectacle
+        block_migration_identifier = "#{l10n_migration_identifier}-spectacle"
+        block_title_migration_identifier = "#{block_migration_identifier}-title"
+
+        [
+          {
+            migration_identifier: block_title_migration_identifier,
+            title: "Découvrir le spectacle",
+            template_kind: "title",
+            data: {}
+          },
+          {
+            migration_identifier: block_migration_identifier,
+            title: "",
+            template_kind: "projects",
+            data: {
+              mode: "selection",
+              layout: "large",
+              option_categories: true,
+              option_image: true,
+              option_subtitle: true,
+              option_summary: false,
+              option_year: false,
+              elements: [
+                { id: spectacle.osuny_id }
+              ]
+            }
+          }
+        ]
+      end
+
+      def blocks_lieu
+        block_migration_identifier = "#{l10n_migration_identifier}-lieu"
+        block_title_migration_identifier = "#{block_migration_identifier}-title"
+        return [
+          destroy_block_data(block_title_migration_identifier),
+          destroy_block_data(block_migration_identifier)
+        ] if lieu.nil?
+
+        [
+          {
+            migration_identifier: block_title_migration_identifier,
+            title: "Le lieu",
+            template_kind: "title",
+            data: {}
+          },
+          {
+            migration_identifier: block_migration_identifier,
+            title: "",
+            template_kind: "organizations",
+            data: {
+              mode: "selection",
+              layout: "grid",
+              elements: [
+                { id: lieu.osuny_id }
+              ]
+            }
+          }
+        ]
+      end
+
+      def blocks_operateurs
+        block_migration_identifier = "#{l10n_migration_identifier}-operateurs"
+        block_title_migration_identifier = "#{block_migration_identifier}-title"
+        return [
+          destroy_block_data(block_title_migration_identifier),
+          destroy_block_data(block_migration_identifier)
+        ] if lieu.nil?
+
+        [
+          {
+            migration_identifier: block_title_migration_identifier,
+            title: "Les opérateurs",
+            template_kind: "title",
+            data: {}
+          },
+          {
+            migration_identifier: block_migration_identifier,
+            title: "",
+            template_kind: "organizations",
+            data: {
+              mode: "selection",
+              layout: "grid",
+              elements: operateurs.map { |operateur|
+                { id: operateur.osuny_id }
+              }
+            }
+          }
+        ]
       end
 
     end
