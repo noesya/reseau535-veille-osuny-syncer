@@ -222,7 +222,7 @@ module Grist
         [
           {
             migration_identifier: block_title_migration_identifier,
-            title: "Les opérateurs",
+            title: "Organisateurs",
             template_kind: "title",
             data: {}
           },
