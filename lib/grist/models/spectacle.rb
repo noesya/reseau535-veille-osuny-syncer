@@ -341,7 +341,7 @@ module Grist
               text: "",
               elements: [
                 {
-                  title: "Dossier Drive",
+                  title: "Toutes les informations",
                   url: files_url,
                   target_blank: true
                 }
