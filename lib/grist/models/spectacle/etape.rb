@@ -193,8 +193,10 @@ module Grist
           {
             migration_identifier: block_title_migration_identifier,
             title: "Le lieu",
-            template_kind: "collapsed",
-            data: {}
+            template_kind: "title",
+            data: {
+              layout: "collapsed"
+            }
           },
           {
             migration_identifier: block_migration_identifier,
