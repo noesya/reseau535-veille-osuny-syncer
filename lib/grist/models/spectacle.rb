@@ -22,7 +22,7 @@ module Grist
         @state_id = data["fields"]["Etat"]
         @discipline_ids = list_values(data["fields"]["Disciplines"])
         @thematiques_ids = list_values(data["fields"]["Thematiques"])
-        @soutiens_ids = list_values(data["fields"]["Soutiens"])
+        @soutiens_ids = list_values(data["fields"]["Membres soutiens"])
         @minimum_age = data["fields"]["Age_minimum"]
         @duration_minutes = data["fields"]["Duree_en_minutes_"]
         @ideal_playground = data["fields"]["Espace_de_jeu_ideal"].to_s.strip
