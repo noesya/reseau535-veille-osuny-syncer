@@ -2,11 +2,11 @@ module Grist
   module Models
     class Spectacle < Base
       attr_reader :title, :equipe_artistique_ids, :synopsis, :presentation, :year,
-                  :state_id, :discipline_ids, :thematiques_ids,
+                  :state_id, :discipline_ids, :thematiques_ids, :soutiens_ids,
                   :minimum_age, :duration_minutes, :ideal_playground, :details, :technical_needs,
                   :featured_image_url, :teaser_video_url, :files_url,
                   :is_archive
-      attr_accessor :equipes_artistiques, :disciplines, :thematiques, :etapes
+      attr_accessor :equipes_artistiques, :disciplines, :thematiques, :soutiens, :etapes
 
       def self.table_name
         "Spectacles"
@@ -22,6 +22,7 @@ module Grist
         @state_id = data["fields"]["Etat"]
         @discipline_ids = list_values(data["fields"]["Disciplines"])
         @thematiques_ids = list_values(data["fields"]["Thematiques"])
+        @soutiens_ids = list_values(data["fields"]["Soutiens"])
         @minimum_age = data["fields"]["Age_minimum"]
         @duration_minutes = data["fields"]["Duree_en_minutes_"]
         @ideal_playground = data["fields"]["Espace_de_jeu_ideal"].to_s.strip
@@ -65,11 +66,10 @@ module Grist
         }.compact
       end
 
-      def supporting_operateurs
-        @supporting_operateurs ||= begin
-          residency_etapes = etapes.select { |etape| etape.etat.to_s == "Résidence" }
-          residency_etapes.map(&:operateurs).flatten.compact
-        end
+      def soutiens
+        @soutiens ||= soutiens_ids.map { |soutien_id|
+          Organisation.find(soutien_id)
+        }.compact
       end
 
       def etapes
@@ -358,7 +358,7 @@ module Grist
         return [
           destroy_block_data(block_title_migration_identifier),
           destroy_block_data(block_migration_identifier)
-        ] if supporting_operateurs.empty?
+        ] if soutiens.empty?
 
         [
           {
@@ -374,8 +374,8 @@ module Grist
             data: {
               mode: "selection",
               layout: "grid",
-              elements: supporting_operateurs.map { |operateur|
-                { id: operateur.osuny_id }
+              elements: soutiens.map { |soutien|
+                { id: soutien.osuny_id }
               }
             }
           }

@@ -124,9 +124,9 @@ module Grist
           blocks = []
           # Add all the blocks
           blocks << block_comment
+          blocks.concat(blocks_operateurs)
           blocks.concat(blocks_spectacle)
           blocks.concat(blocks_lieu)
-          blocks.concat(blocks_operateurs)
           # Set the positions
           blocks.each_with_index { |block, index|
             block[:position] = index + 1
@@ -157,7 +157,7 @@ module Grist
         [
           {
             migration_identifier: block_title_migration_identifier,
-            title: "Découvrir le spectacle",
+            title: "Le spectacle",
             template_kind: "title",
             data: {}
           },
