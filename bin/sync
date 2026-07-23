@@ -47,3 +47,14 @@ end
 ].each do |klass|
   sync_model(klass, models_scope)
 end
+
+recent_etapes = Grist::Models::Spectacle::Etape.started_or_ended_recently
+puts "[Etape] #{recent_etapes.count} étapes récentes à mettre à jour"
+Grist::Models::Spectacle::Etape.started_or_ended_recently.each do |etape|
+  next if etape.synced
+  puts "Synchronisation de l'étape « #{etape} »"
+  etape.sync_to_osuny
+  next if etape.spectacle.synced
+  puts "Synchronisation du spectacle « #{etape.spectacle} »"
+  etape.spectacle.sync_to_osuny
+end

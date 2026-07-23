@@ -36,6 +36,7 @@ module Grist
                                 : osuny_api_upsert.first
         osuny_record_id = response_data.dig(:created, 0, :id) || response_data.dig(:updated, 0, :id)
         @osuny_id = osuny_record_id
+        @synced = true unless minimal
       rescue OsunyApi::ApiError => e
         puts "[#{self.class.name.split('::').last}] Erreur lors de la synchronisation de \"#{to_s}\": #{e.message}"
       end

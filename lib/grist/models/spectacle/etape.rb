@@ -9,6 +9,16 @@ module Grist
         "Etapes"
       end
 
+      def self.started_or_ended_recently
+        valid_dates = [Date.today - 1, Date.today]
+        all.select { |etape|
+          etape.start_date && etape.end_date && (
+            valid_dates.include?(etape.start_date) ||
+            valid_dates.include?(etape.end_date)
+          )
+        }
+      end
+
       def initialize(data)
         super(data)
         @spectacle_id = data["fields"]["Spectacle"]

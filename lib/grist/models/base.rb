@@ -8,7 +8,7 @@ module Grist
       SYNCABLE_DAYS_THRESHOLD = 2 # Sync only records updated in the last 2 days
       MONTH_NAMES = %w[janvier février mars avril mai juin juillet août septembre octobre novembre décembre]
 
-      attr_reader :id, :last_updated_on, :_grist_data
+      attr_reader :id, :last_updated_on, :synced, :_grist_data
 
       def self.table_name
         raise NoMethodError, "You must implement the #{self.class.name}.table_name class method"
@@ -39,6 +39,7 @@ module Grist
       def initialize(data)
         @_grist_data = data
         @id = data["id"]
+        @synced = false
         @last_updated_on = date_value(data["fields"]["Derniere_mise_a_jour"]) || Date.today
       end
 
