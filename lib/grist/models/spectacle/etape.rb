@@ -104,7 +104,7 @@ module Grist
                       subtitle: spectacle.subtitle,
                       summary: summary,
                       featured_image: { url: spectacle.featured_image_url },
-                      published: true,
+                      published: !spectacle.is_archive,
                       blocks: osuny_blocks
                     }
                   }
