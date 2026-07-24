@@ -88,6 +88,18 @@ module Grist
         @dated_etapes ||= etapes.select(&:dated?)
       end
 
+      def current_or_future_etapes
+        @current_or_future_etapes ||= dated_etapes.select { |etape|
+          etape.end_date >= Date.today
+        }
+      end
+
+      def past_etapes
+        @past_etapes ||= dated_etapes.select { |etape|
+          etape.end_date < Date.today
+        }
+      end
+
       def subtitle
         equipes_artistiques.map(&:to_s).join(", ")
       end
@@ -425,6 +437,8 @@ module Grist
         [
           block_etapes_title,
           block_etapes_list,
+          block_etapes_past_title,
+          block_etapes_past_list,
           block_etapes_tableau, # Legacy, remove after destroy sync
           block_etapes_lieux, # Legacy, remove after destroy sync
           block_etapes_operateurs # Legacy, remove after destroy sync
@@ -433,7 +447,7 @@ module Grist
 
       def block_etapes_title
         block_migration_identifier = "#{l10n_migration_identifier}-etapes-titre"
-        return destroy_block_data(block_migration_identifier) if etapes.empty?
+        return destroy_block_data(block_migration_identifier) if current_or_future_etapes.empty?
         {
           migration_identifier: block_migration_identifier,
           title: "Vie du spectacle",
@@ -444,7 +458,7 @@ module Grist
 
       def block_etapes_list
         block_migration_identifier = "#{l10n_migration_identifier}-etapes-list"
-        return destroy_block_data(block_migration_identifier) if dated_etapes.empty?
+        return destroy_block_data(block_migration_identifier) if current_or_future_etapes.empty?
 
         {
           migration_identifier: block_migration_identifier,
@@ -459,7 +473,44 @@ module Grist
             option_subtitle: false,
             option_summary: true,
             option_status: false,
-            elements: dated_etapes.map { |etape|
+            elements: current_or_future_etapes.reverse.map { |etape|
+              { id: etape.osuny_id }
+            }
+          }
+        }
+      end
+
+      def block_etapes_past_title
+        block_migration_identifier = "#{l10n_migration_identifier}-etapes-past-titre"
+        return destroy_block_data(block_migration_identifier) if past_etapes.empty?
+        {
+          migration_identifier: block_migration_identifier,
+          title: "Vie du spectacle (archive)",
+          template_kind: "title",
+          data: {
+            layout: "collapsed"
+          }
+        }
+      end
+
+      def block_etapes_past_list
+        block_migration_identifier = "#{l10n_migration_identifier}-etapes-past-list"
+        return destroy_block_data(block_migration_identifier) if past_etapes.empty?
+
+        {
+          migration_identifier: block_migration_identifier,
+          title: "",
+          template_kind: "agenda",
+          data: {
+            layout: "list",
+            mode: "selection",
+            option_categories: true,
+            option_dates: true,
+            option_image: true,
+            option_subtitle: false,
+            option_summary: true,
+            option_status: false,
+            elements: past_etapes.map { |etape|
               { id: etape.osuny_id }
             }
           }
